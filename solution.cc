@@ -30,7 +30,7 @@ private:
 public:
   float N; //Assigned value
   int maxVal;
-  Solution(float n, int questionNum) : N(n), maxVal(239), numDoms(7), bestScore(FLT_MAX), numTry(7) {
+  Solution(float n, int questionNum) : N(n), maxVal(239), numDoms(7), bestScore(FLT_MAX), numTry(6) {
     if (questionNum == 1) {
       getScore = &exactScore;
     } else {
@@ -84,9 +84,11 @@ public:
       }
     } else {
       if (currScore < bestScore) {
+        /*
         cout << "New best score: " << bestScore << " -> " << currScore << endl;
         cout << "Old Set: "; printSet(bestDenoms);  cout << endl;
         cout << "New Set: "; printSet(denoms); cout << endl << endl;
+        */
 
         bestScore = currScore;
         bestDenoms = denoms;
@@ -218,7 +220,6 @@ int main(int argc, char **argv) {
   firstDenoms.insert(1);
 
   pair<float, set<int> > result = sol.findOptimalDenoms(firstDenoms);
-  cout << "Best Score: " << result.first << endl;
   sol.printSet(result.second);
 
   return 0;
