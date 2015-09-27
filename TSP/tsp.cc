@@ -19,7 +19,6 @@
 
 using namespace std;
 
-const int numAnts = 50;
 const float alpha = 3.f;
 const float beta = 7.f;
 const float initPhe = 1.f;
@@ -230,13 +229,10 @@ float antColonyAlgo(cluster *c) {
   float bestDistance = FLT_MAX;
   vector<node*> bestRoute;
 
-  for (int ant = 0; ant < numAnts; ant++) {
-    printf("ANT: %d\n", ant+1);
+  for (int ant = 0; ant < c->nodes.size(); ant++) {
     vector<node*> newRoute = scheduleRoute(c, pheromones);
-    printf("GOT new route\n");
     float distance = routeDist(newRoute);
     updatePheromones(newRoute, pheromones, distance);
-    printf("phe updated\n");
 
     if (distance < bestDistance) {
       bestDistance = distance;
@@ -244,7 +240,12 @@ float antColonyAlgo(cluster *c) {
     }
   }
 
-  printRoute(bestRoute);
+  for (int i = 1; i < bestRoute.size(); i++) {
+    bestRoute[i]->prev = bestRoute[i-1];
+    bestRoute[i-1]->next = bestRoute[i];
+  }
+  bestRoute[bestRoute.size()-1]->next = bestRoute[0];
+  bestRoute[0]->prev = bestRoute[bestRoute.size()-1];
 
   return bestDistance - dist(bestRoute[0], bestRoute[bestRoute.size()-1]);
 }
@@ -253,7 +254,6 @@ float antColonyAlgo(cluster *c) {
 
 // ----- Main --------
 //XXX: K-Means + ACO
-/*
 int main(void) {
   string inputLine;
   map<int, node*> grid;
@@ -274,13 +274,20 @@ int main(void) {
   runKMeans(groups, grid);
 
   //Step2: Cluster optimal path finding
+  float results = 0.f;
+  for (map<int, cluster*>::iterator it = groups.begin(); it != groups.end(); it++) {
+    float r = antColonyAlgo(it->second);
+    printf("Cluster: %d (%lu) = %.4f\n", it->first, it->second->nodes.size(), r);
+    results += r;
+  }
+  printf("RET: %.4f\n", results);
   
   //Step3: Cluster connection
 
   return 0;
 }
-*/
 
+/*
 //XXX: Vanilla ACO
 int main(void) {
   string inputLine;
@@ -295,3 +302,4 @@ int main(void) {
   printf("Result: %.2f\n", result);
   return 0;
 }
+*/
