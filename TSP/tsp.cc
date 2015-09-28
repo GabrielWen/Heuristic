@@ -15,7 +15,7 @@
 #include <cfloat>
 #include <stdio.h>
 
-#include <ctime>
+#include <assert.h>
 
 using namespace std;
 
@@ -33,6 +33,7 @@ struct node {
   float group;
   struct node *next;
   struct node *prev;
+  struct node *connect;
 
   bool operator==(const node &a)const {
     return abs(a.x - x) < 0.00001 && abs(a.y - y) < 0.00001 && abs(a.z - z) < 0.00001;
@@ -219,7 +220,8 @@ void printRoute(vector<node*> route) {
 }
 
 float antColonyAlgo(cluster *c) {
-  map<pair<int, int>, float> pheromones; //XXX: key is using city name
+  int numAnts = c->nodes.size();
+  map<pair<int, int>, float> pheromones;
   for (int u = 0; u < c->nodes.size(); u++) {
     for (int v = u+1; v < c->nodes.size(); v++) {
       pair<int, int> edge = make_pair(min(c->nodes[u]->name, c->nodes[v]->name), max(c->nodes[u]->name, c->nodes[v]->name));
@@ -229,7 +231,7 @@ float antColonyAlgo(cluster *c) {
   float bestDistance = FLT_MAX;
   vector<node*> bestRoute;
 
-  for (int ant = 0; ant < c->nodes.size(); ant++) {
+  for (int ant = 0; ant < numAnts; ant++) {
     vector<node*> newRoute = scheduleRoute(c, pheromones);
     float distance = routeDist(newRoute);
     updatePheromones(newRoute, pheromones, distance);
@@ -240,17 +242,156 @@ float antColonyAlgo(cluster *c) {
     }
   }
 
+  //Connect nodes
   for (int i = 1; i < bestRoute.size(); i++) {
     bestRoute[i]->prev = bestRoute[i-1];
     bestRoute[i-1]->next = bestRoute[i];
   }
   bestRoute[bestRoute.size()-1]->next = bestRoute[0];
   bestRoute[0]->prev = bestRoute[bestRoute.size()-1];
+  node *stop = bestRoute[0], *ptr = bestRoute[1];
 
   return bestDistance - dist(bestRoute[0], bestRoute[bestRoute.size()-1]);
 }
 
-// ------Cluster connectin -----------
+// ------Cluster connection -----------
+pair<node*, node*> pickConnectNode(cluster* c, node *n) {
+  node *ret = NULL;
+  float minDist = FLT_MAX;
+  for (int i = 0; i < c->nodes.size(); i++) {
+    float distance = dist(c->nodes[i], n);
+    if (distance < minDist) {
+      minDist = distance;
+      ret = c->nodes[i];
+    }
+  }
+
+  //Cut longer neighbor
+  node *end = NULL;
+  if (dist(ret, ret->prev) < dist(ret, ret->next)) {
+    //Cut next
+    end = ret->next;
+    ret->next->prev = NULL;
+    ret->next = NULL;
+  } else {
+    //Cut prev
+    end = ret->prev;
+    ret->prev->next = NULL;
+    ret->prev = NULL;
+  }
+  
+  //Return: a pair of node, first is connecting node, second is end node
+  return make_pair(ret, end);
+}
+
+void connectTwoNodes(node *a, node *b) {
+  a->connect = b;
+  b->connect = a;
+}
+
+vector<node*> generateRoute(node *start, node *end) {
+  node *ptr = start;
+  vector<node*> route;
+  while (ptr != NULL) {
+    node *local = ptr;
+    route.push_back(ptr);
+    if (ptr->prev) {
+      while (ptr->prev) {
+        route.push_back(ptr->prev);
+        ptr = ptr->prev;
+      }
+    } else {
+      while (ptr->next) {
+        route.push_back(ptr->next);
+        ptr = ptr->next;
+      }
+    }
+    ptr = ptr->connect;
+  }
+
+  //Cut longest path
+  float maxDist = dist(route[0], route[route.size()-1]);
+  pair<int, int> cut = make_pair(0, route.size()-1);
+  bool updated = false;
+  for (int i = 1; i < route.size(); i++) {
+    float distance = dist(route[i-1], route[i]);
+    if (distance < maxDist) {
+      maxDist = distance;
+      cut = make_pair(i-1, i);
+      updated = true;
+    }
+  }
+  if (updated) {
+    vector<node*> newResult;
+    for (int i = cut.second; i < route.size(); i++) {
+      newResult.push_back(route[i]);
+    }
+    for (int i = 0; i <= cut.first; i++) {
+      newResult.push_back(route[i]);
+    }
+    return newResult;
+  }
+
+  return route;
+}
+
+vector<node*> clusterConnect(map<int, cluster*> groups) {
+  vector<node*> final;
+  //Connect first two clusters
+  pair<int, int> first;
+  set<int> visited;
+  float minDist = FLT_MAX;
+  int a, b;
+  for (a = 0; a < groups.size(); a++) {
+    for (b = a+1; b < groups.size(); b++) {
+      float distance = dist(groups[a]->centroid, groups[b]->centroid);
+      if (distance < minDist) {
+        minDist = distance;
+        first = make_pair(a, b);
+      }
+    }
+  }
+  visited.insert(first.first);
+  visited.insert(first.second);
+  pair<node*, node*> pickedNode1 = pickConnectNode(groups[first.first], groups[first.second]->centroid);
+  pair<node*, node*> pickedNode2 = pickConnectNode(groups[first.second], groups[first.first]->centroid);
+  connectTwoNodes(pickedNode1.first, pickedNode2.first);
+  node *endNode1 = pickedNode1.second, *endNode2 = pickedNode2.second;
+
+  //Connect all others
+  while (visited.size() < groups.size()) {
+    int nextIdx = -1;
+    float minDist = FLT_MAX;
+    for (int i = 0; i < groups.size(); i++) {
+      if (visited.count(i)) {
+        continue;
+      }
+      float dist1 = dist(endNode1, groups[i]->centroid), dist2 = dist(endNode2, groups[i]->centroid);
+      if (minDist < min(dist1, dist2)) {
+        continue;
+      }
+      nextIdx = i;
+      minDist = min(dist1, dist2);
+    }
+    visited.insert(nextIdx);
+
+    pair<node*, node*> nextPair;
+    if (dist(endNode1, groups[nextIdx]->centroid) < dist(endNode2, groups[nextIdx]->centroid)) {
+      nextPair = pickConnectNode(groups[nextIdx], endNode1);
+      connectTwoNodes(endNode1, nextPair.first);
+      endNode1 = nextPair.second;
+    } else {
+      nextPair = pickConnectNode(groups[nextIdx], endNode2);
+      connectTwoNodes(endNode2, nextPair.first);
+      endNode2 = nextPair.second;
+    }
+  }
+
+  final = generateRoute(endNode1, endNode2);
+
+  return final;
+}
+
 
 // ----- Main --------
 //XXX: K-Means + ACO
@@ -274,16 +415,16 @@ int main(void) {
   runKMeans(groups, grid);
 
   //Step2: Cluster optimal path finding
-  float results = 0.f;
   for (map<int, cluster*>::iterator it = groups.begin(); it != groups.end(); it++) {
     float r = antColonyAlgo(it->second);
-    printf("Cluster: %d (%lu) = %.4f\n", it->first, it->second->nodes.size(), r);
-    results += r;
   }
-  printf("RET: %.4f\n", results);
   
   //Step3: Cluster connection
-
+  vector<node*> route = clusterConnect(groups);
+  for (int i = 0; i < route.size(); i++) {
+    cout << route[i]->name << " ";
+  }
+  cout << endl << routeDist(route) << endl;
   return 0;
 }
 
