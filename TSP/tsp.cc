@@ -15,15 +15,17 @@
 #include <cfloat>
 #include <stdio.h>
 
+#include <time.h>
 #include <assert.h>
 
 using namespace std;
 
-const float alpha = 3.f;
-const float beta = 7.f;
+const int numAnts = 300;
+const float alpha = 0.1;
+const float beta = 9.f;
 const float initPhe = 1.f;
-const float Q = 0.03332;
-const float P = 0.03332;
+const float Q = 1e-4;
+const float P = 0.8;
 
 struct node {
   int name;
@@ -220,7 +222,7 @@ void printRoute(vector<node*> route) {
 }
 
 float antColonyAlgo(cluster *c) {
-  int numAnts = c->nodes.size();
+  //int numAnts = c->nodes.size();
   map<pair<int, int>, float> pheromones;
   for (int u = 0; u < c->nodes.size(); u++) {
     for (int v = u+1; v < c->nodes.size(); v++) {
@@ -396,6 +398,8 @@ vector<node*> clusterConnect(map<int, cluster*> groups) {
 // ----- Main --------
 //XXX: K-Means + ACO
 int main(void) {
+  time_t t1 = time(NULL);
+
   string inputLine;
   map<int, node*> grid;
   while (getline(cin, inputLine)) {
@@ -425,6 +429,7 @@ int main(void) {
     cout << route[i]->name << " ";
   }
   cout << endl << routeDist(route) << endl;
+  cout << "Time: " << difftime(time(NULL), t1) << endl;
   return 0;
 }
 
