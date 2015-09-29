@@ -20,7 +20,7 @@
 
 using namespace std;
 
-const int numAnts = 300;
+const int numAnts = 100;
 const float alpha = 0.1;
 const float beta = 9.f;
 const float initPhe = 1.f;
@@ -177,6 +177,7 @@ vector<node*> globalScheduleRoute(cluster *c, map<pair<int, int>, float> pheromo
   int startIdx = rand() % c->nodes.size();
   set<int> availables;
   vector<node*> route;
+  route.push_back(c->nodes[startIdx]);
   for (int n = 0; n < c->nodes.size(); n++) {
     if (n != startIdx) {
       availables.insert(n);
@@ -195,7 +196,37 @@ vector<node*> globalScheduleRoute(cluster *c, map<pair<int, int>, float> pheromo
 
 // For local routing, there has pre-defined start point and end point
 vector<node*> localScheduleRoute(cluster *c, map<pair<int, int>, float> pheromones) {
-  vector<node*> route;
+  vector<node*> route, left, right;
+  left.push_back(c->nodes[c->startIdx]);
+  right.push_back(c->nodes[c->endIdx]);
+  set<int> availables;
+  for (int n = 0; n < c->nodes.size(); n++) {
+    if (n != c->startIdx && n != c->endIdx) {
+      availables.insert(n);
+    }
+  }
+
+  int leftPtr = c->startIdx, rightPtr = c->endIdx;
+  while (availables.size()) {
+    int nextIdx;
+    if (left.size() < right.size()) {
+      nextIdx = pickNextIdx(availables, pheromones, c, leftPtr);
+      left.push_back(c->nodes[nextIdx]);
+      leftPtr = nextIdx;
+    } else {
+      nextIdx = pickNextIdx(availables, pheromones, c, rightPtr);
+      right.push_back(c->nodes[nextIdx]);
+      rightPtr = nextIdx;
+    }
+    availables.erase(nextIdx);
+  }
+
+  for (int i = 0; i < left.size(); i++) {
+    route.push_back(left[i]);
+  }
+  for (int i = right.size()-1; i >= 0; i--) {
+    route.push_back(right[i]);
+  }
 
   return route;
 }
@@ -311,8 +342,18 @@ int main(int argc, char **argv) {
   }
   vector<node*> globalRoute = antColonyAlgo(global, globalScheduleRoute);
   clusterConnection(groups, globalRoute);
+
   // Find local path within clusters
+  vector<node*> result;
+  for (int i = 0; i < globalRoute.size(); i++) {
+    int idx = globalRoute[i]->name;
+    vector<node*> route = antColonyAlgo(groups[idx], localScheduleRoute);
+    for (int r = 0; r < route.size(); r++) {
+      result.push_back(route[r]);
+    }
+  }
   // Output global routing
+  printf("Result: %.2f\n", routeDist(result));
 
   return 0;
 }
