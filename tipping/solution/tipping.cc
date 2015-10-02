@@ -18,10 +18,12 @@
 #include <utility>
 #include <math.h>
 #include <cmath>
+#include <string.h>
+#include <string>
 
 using namespace std;
 
-#define PORT "8001"  // the port users will be connecting to
+#define PORT "8013"  // the port users will be connecting to
 
 #define BACKLOG 1   // how many pending connections queue will hold
 
@@ -47,6 +49,20 @@ void *get_in_addr(struct sockaddr *sa)
 }
 
 // ---------- No tipping game algorithm ----------------
+string recvCmd(int fd) {
+  string ret("");
+
+  while (ret.find("STATE END") == string::npos) {
+    char buff[100];
+    if (recv(fd, (void*) buff, 100, 0) == -1) {
+      perror("Recv Error\n");
+    } else {
+      ret.append(buff);
+    }
+  }
+
+  return ret;
+}
 
 class NoTippingPlayer {
 private:
@@ -147,13 +163,11 @@ int main(void)
 
     NoTippingPlayer player;
 
-    char buff[200];
-    if (recv(new_fd, (void*) buff, 200, 0) == -1) {
-      perror("recv");
-    }
+    string buff = recvCmd(new_fd);
     char cmd[10];
     int pos, weight;
-    sscanf(buff, "%s %d %d", cmd, &pos, &weight);
+    sscanf(buff.c_str(), "%s %d %d", cmd, &pos, &weight);
+    printf("Got tokens: cmd(%s) pos(%d) weight(%d)\n", cmd, pos, weight);
 
     if (!fork()) { // this is the child process
       close(sockfd); // child doesn't need the listener
