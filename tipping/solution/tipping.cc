@@ -60,23 +60,95 @@ string recvCmd(int fd) {
       ret.append(buff);
     }
   }
+  ret.push_back('\0');
 
   return ret;
 }
 
+struct Weight {
+  int position;
+  int weight;
+  bool mine;
+
+  Weight(int p, int w, bool m): position(p), weight(w), mine(m) {};
+  Weight(): position(0), weight(0), mine(false) {};
+};
+
+struct MoveOpt {
+  int position;
+  int weight;
+  float prob;
+
+  MoveOpt(int p, int w, float b): position(p), weight(w), prob(b) {};
+  MoveOpt(): position(0), weight(0), prob(0.f) {};
+};
+
+bool compProb(MoveOpt *a, MoveOpt *b) {
+  return a->prob < b->prob;
+}
+
 class NoTippingPlayer {
 private:
-  int board[50];
+  vector<Weight*> board;
   set<int> availables;
+  int left_torq;
+  int right_torq;
+  bool firstPlayer;
 
   int getIdx(int i) {
     return 25 + i;
   }
+
+  bool isTipping() {
+    return left_torq > 0 || right_torq < 0;
+  }
+
+  const char* addWeight() {
+    vector<ModeOpt*> choices;
+    for (int i = 0; i < board.size(); i++) {
+      if (board[i]->weight) {
+        continue;
+      }
+
+      MoveOpt *now = new MoveOpt();
+      
+    }
+    return "";
+  }
+
+  const char* removeWeight() {
+    return "";
+  }
+
 public:
   NoTippingPlayer() {
-    memset(board, 0, sizeof board);
-    board[getIdx(-3)] = 3;
+    for (int i = -25; i <= 25; i++) {
+      board.push_back(new Weight(getIdx(i), 0, false));
+    }
+    board[getIdx(-3)]->weight = 3;
+    left_torq = 0;
+    right_torq = 0;
+    firstPlayer = false;
     for (int i = 0; i < 15; availables.insert(i++)) ;
+  }
+
+  void setFirstPlayer() {
+    firstPlayer = true;
+  }
+
+  const char* nextMove(bool adding, int position, int weight) {
+    //Update state
+    left_torq -= (position - (-3)) * weight;
+    right_torq -= (position - (-1)) * weight;
+
+    if (isTipping()) {
+      return "";
+    }
+
+    delete board[position];
+    board[position] = new Weight(position, weight, false);
+    
+    return adding ? addWeight() : removeWeight();
   }
 };
 
@@ -148,6 +220,8 @@ int main(void)
 
   printf("server: waiting for connections...\n");
 
+  NoTippingPlayer player;
+
   while(1) {  // main accept() loop
     sin_size = sizeof their_addr;
     new_fd = accept(sockfd, (struct sockaddr *)&their_addr, &sin_size);
@@ -161,13 +235,11 @@ int main(void)
       s, sizeof s);
     printf("server: got connection from %s\n", s);
 
-    NoTippingPlayer player;
-
     string buff = recvCmd(new_fd);
     char cmd[10];
     int pos, weight;
     sscanf(buff.c_str(), "%s %d %d", cmd, &pos, &weight);
-    printf("Got tokens: cmd(%s) pos(%d) weight(%d)\n", cmd, pos, weight);
+    //TODO: Entry point to player
 
     if (!fork()) { // this is the child process
       close(sockfd); // child doesn't need the listener
