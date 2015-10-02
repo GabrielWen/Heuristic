@@ -1,7 +1,3 @@
-/*
-** server.c -- a stream socket server demo
-*/
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -14,6 +10,16 @@
 #include <arpa/inet.h>
 #include <sys/wait.h>
 #include <signal.h>
+
+#include <vector>
+#include <set>
+#include <map>
+#include <algorithm>
+#include <utility>
+#include <math.h>
+#include <cmath>
+
+using namespace std;
 
 #define PORT "8001"  // the port users will be connecting to
 
@@ -39,6 +45,26 @@ void *get_in_addr(struct sockaddr *sa)
 
   return &(((struct sockaddr_in6*)sa)->sin6_addr);
 }
+
+// ---------- No tipping game algorithm ----------------
+
+class NoTippingPlayer {
+private:
+  int board[50];
+  set<int> availables;
+
+  int getIdx(int i) {
+    return 25 + i;
+  }
+public:
+  NoTippingPlayer() {
+    memset(board, 0, sizeof board);
+    board[getIdx(-3)] = 3;
+    for (int i = 0; i < 15; availables.insert(i++)) ;
+  }
+};
+
+// ------------ Main ------------------------------------
 
 int main(void)
 {
@@ -119,6 +145,8 @@ int main(void)
       s, sizeof s);
     printf("server: got connection from %s\n", s);
 
+    NoTippingPlayer player;
+
     char buff[200];
     if (recv(new_fd, (void*) buff, 200, 0) == -1) {
       perror("recv");
@@ -126,7 +154,6 @@ int main(void)
     char cmd[10];
     int pos, weight;
     sscanf(buff, "%s %d %d", cmd, &pos, &weight);
-    printf("Cmd:(%s) pos:(%d) weight:(%d)\n", cmd, pos, weight);
 
     if (!fork()) { // this is the child process
       close(sockfd); // child doesn't need the listener
