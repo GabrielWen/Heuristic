@@ -39,12 +39,6 @@ public class AIContestant extends NoTippingPlayer{
             firstRemove = false;
         }
 
-        if (verifyGameNotOver(weights_on_board)) {
-          System.out.println("TEST1");
-        } else {
-          System.out.println("TEST2");
-        }
-
         StringTokenizer tk = new StringTokenizer(command);
 
         // get the command, and opponent's position and weight last round.
