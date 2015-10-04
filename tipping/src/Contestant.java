@@ -78,8 +78,6 @@ class Contestant extends NoTippingPlayer {
     }
 
     private Weight firstPlayerAdd() {
-      Weight ret = new Weight(0, 0, true);
-
       //Step1: Check if blocking a final state is possible
       for (int i = 25; i >= -25; i--) {
         if (board[getIdx(i)].weight > 0)  continue;
@@ -100,6 +98,7 @@ class Contestant extends NoTippingPlayer {
             int count = 0;
             ArrayList<Integer> weights = (ArrayList<Integer>) finalState.get(fIdx);
             for (Integer x: weights) {
+              if (enemyWeights.get(x) != null)  continue;
               board[getIdx(pos)] = new Weight(x, pos, false);
               if (!verifyGameNotOver()) {
                 count++;
@@ -111,7 +110,6 @@ class Contestant extends NoTippingPlayer {
           board[getIdx(i)] = new Weight(0, i, true);
 
           if (numBlocked > 0) {
-            System.out.println("First part: " + i + " " + w);
             return new Weight(w, i, true);
           }
         }
@@ -138,8 +136,7 @@ class Contestant extends NoTippingPlayer {
               board[getIdx(enemy_i)] = new Weight(enemy_w, enemy_i, false);
               boolean enemyDone = !verifyGameNotOver();
               board[getIdx(enemy_i)] = new Weight(0, enemy_i, false);
-
-              if (enemyDone)  continue;
+              if (enemyDone)  continue;//TODO
 
               board[getIdx(enemy_i)] = new Weight(enemy_w, enemy_i, false);
               for (int w2 = 15; w2 > 0; w2--) {
@@ -166,13 +163,121 @@ class Contestant extends NoTippingPlayer {
       }
       Collections.sort(choices);
 
-      return choices.get(0).w;
+      if (choices.size() > 0) {
+        return choices.get(0).w;
+      } else {
+        for (int w = 1; w <= 15; w++) {
+          if (!availables[w]) continue;
+          for (int i = -25; i <= 25; i++) {
+            if (board[getIdx(i)].weight > 0)  continue;
+            board[getIdx(i)] = new Weight(w, i, true);
+            boolean gameNotOver = verifyGameNotOver();
+            board[getIdx(i)] = new Weight(0, i, false);
+
+            if (gameNotOver) {
+              return new Weight(w, i, true);
+            }
+          }
+        }
+      }
+      System.out.println("Lose...");
+      return new Weight(0, 0, true);
     }
 
     private Weight secondPlayerAdd() {
-      Weight ret = new Weight(0, 0, true);
+      //Step1: Check if placing a final state is possible
+      int optimalPos = -26, optimalW = 0;
+      for (Object idx: finalState.keySet()) {
+        int i = (Integer) idx;
+        if (board[getIdx(i)].weight > 0)  continue;
 
-      return ret;
+        ArrayList<Integer> weights = (ArrayList<Integer>) finalState.get(i);
+        int maxWeight = 0;
+        for (Integer w: weights) {
+          if (!availables[w]) continue;
+          board[getIdx(i)] = new Weight(w, i, true);
+          boolean gameNotOver = verifyGameNotOver();
+          board[getIdx(i)] = new Weight(0, i, false);
+          if (gameNotOver) {
+            maxWeight = maxWeight > w ? maxWeight : w;
+          }
+        }
+        if (maxWeight > 0 && maxWeight > optimalW) {
+          optimalPos = i;
+          optimalW = maxWeight;
+        }
+      }
+      if (optimalW > 0) {
+        return new Weight(optimalW, optimalPos, true);
+      }
+
+      //Step2: If not, use MinMax
+      ArrayList<Choice> choices = new ArrayList<Choice>();
+      for (int w = 15; w > 0; w--) {
+        if(!availables[w])  continue;
+        for (int i = -25; i <= 25; i++) {
+          if (board[getIdx(i)].weight > 0)  continue;
+          board[getIdx(i)] = new Weight(w, i, true);
+          boolean gameOver = !verifyGameNotOver();
+          board[getIdx(i)] = new Weight(0, i, false);
+          if (gameOver) continue;
+
+          int count = 0;
+          board[getIdx(i)] = new Weight(w, i, true);
+          availables[w] = false;
+          for (int enemy_w = 15; enemy_w > 0; enemy_w--) {
+            if (enemyWeights.get(enemy_w) != null)  continue;
+            for (int enemy_i = -25; enemy_i <= 25; enemy_i++) {
+              if (board[getIdx(enemy_i)].weight > 0)  continue;
+              board[getIdx(enemy_i)] = new Weight(enemy_w, enemy_i, false);
+              boolean enemyOver = !verifyGameNotOver();
+              board[getIdx(enemy_i)] = new Weight(0, enemy_i, false);
+              if (enemyOver)  continue;//TODO
+
+              board[getIdx(enemy_i)] = new Weight(enemy_w, enemy_i, false);
+              for (int w2= 15; w2 > 0; w2--) {
+                if (!availables[w2])  continue;
+                for (int i2 = -25; i2 <= 25; i2++) {
+                  if (board[getIdx(i2)].weight > 0) continue;
+                  board[getIdx(i2)] = new Weight(w2, i2, true);
+                  boolean secondNotOver = verifyGameNotOver();
+                  board[getIdx(i2)] = new Weight(0, i2, false);
+                  if (secondNotOver) {
+                    count++;
+                  }
+                }
+              }
+              board[getIdx(enemy_i)] = new Weight(0, enemy_i, false);
+            }
+          }
+          board[getIdx(i)] = new Weight(0, i, false);
+          availables[w] = true;
+          if (count > 0) {
+            choices.add(new Choice(count, new Weight(w, i, true)));
+          }
+        }
+      }
+      Collections.sort(choices);
+
+      if (choices.size() > 0) {
+        return choices.get(0).w;
+      } else {
+        for (int w = 1; w <= 15; w++) {
+          if (!availables[w]) continue;
+          for (int i = -25; i <= 25; i++) {
+            if (board[getIdx(i)].weight > 0)  continue;
+            board[getIdx(i)] = new Weight(w, i, true);
+            boolean gameNotOver = verifyGameNotOver();
+            board[getIdx(i)] = new Weight(0, i, false);
+
+            if (gameNotOver) {
+              return new Weight(w, i, true);
+            }
+          }
+        }
+      }
+      System.out.println("Lose...");
+      return new Weight(0, 0, true);
     }
 
     private Weight addWeight() {
@@ -259,8 +364,6 @@ class Contestant extends NoTippingPlayer {
       } else {
         strategy = removeWeight();
       }
-
-      System.out.println(strategy.position + " " + strategy.weight);
 
       return strategy.position + " " + strategy.weight;
     }
