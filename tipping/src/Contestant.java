@@ -16,6 +16,7 @@ class Contestant extends NoTippingPlayer {
     private boolean[] availables;
     private HashMap enemyWeights;
     private boolean firstPlayer;
+    private boolean addStage;
     private Weight strategy;
 
     private int getIdx(int i) {
@@ -77,46 +78,78 @@ class Contestant extends NoTippingPlayer {
         super(port);
     }
 
+    private int countNumMyMoves() {
+      int count = 0;
+      for (int i = 25; i >= -25; i--) {
+        if (board[getIdx(i)].weight > 0)  continue;
+        for (int w = 15; w > 0; w--) {
+          if (!availables[w]) continue;
+          board[getIdx(i)] = new Weight(w, i, true);
+          boolean gameNotOver = verifyGameNotOver();
+          board[getIdx(i)] = new Weight(0, i , false);
+          if (gameNotOver)  count++;
+        }
+      }
+
+      return count;
+    }
+
+    private int countNumEnemyMoves() {
+      int count = 0;
+      for (int i = -25; i <= 25; i++) {
+        if (board[getIdx(i)].weight > 0)  continue;
+        for (int w = 1; w <= 15; w++) {
+          if (enemyWeights.get(w) != null)  continue;
+          board[getIdx(i)] = new Weight(w, i, false);
+          boolean gameNotOver = verifyGameNotOver();
+          board[getIdx(i)] = new Weight(0, i, false);
+          if (gameNotOver)  count++;
+        }
+      }
+
+      return count;
+    }
+
     private Weight firstPlayerAdd() {
       //Step1: Check if blocking a final state is possible
+      ArrayList<Choice> choices = new ArrayList<Choice>();
       for (int i = 25; i >= -25; i--) {
         if (board[getIdx(i)].weight > 0)  continue;
         for (int w = 15; w > 0; w--) {
           if (!availables[w]) continue;
           board[getIdx(i)] = new Weight(w, i, true);
           boolean gameOver = !verifyGameNotOver();
-          board[getIdx(i)] = new Weight(0, i, true);
+          board[getIdx(i)] = new Weight(0, i, false);
           if (gameOver) continue;
 
-          //Safe to put weight, now check if a final state is successfully blocked
-          board[getIdx(i)] = new Weight(w, i, true);
           int numBlocked = 0;
-          for (Object fIdx: finalState.keySet()) {
-            int pos = (Integer) fIdx;
+          board[getIdx(i)] = new Weight(w, i, true);
+          //Safe to put weight, now check if a final state is successfully blocked
+          for (Object idx: finalState.keySet()) {
+            int pos = (Integer) idx;
             if (board[getIdx(pos)].weight > 0)  continue;
 
-            int count = 0;
-            ArrayList<Integer> weights = (ArrayList<Integer>) finalState.get(fIdx);
+            ArrayList<Integer> weights = (ArrayList<Integer>) finalState.get(idx);
             for (Integer x: weights) {
-              if (enemyWeights.get(x) != null)  continue;
+              if (enemyWeights.get(x) != null && !availables[x])  continue;
               board[getIdx(pos)] = new Weight(x, pos, false);
-              if (!verifyGameNotOver()) {
-                count++;
-              }
+              if (!verifyGameNotOver()) numBlocked++;
               board[getIdx(pos)] = new Weight(0, pos, false);
             }
-            numBlocked = numBlocked > count ? numBlocked : count;
           }
-          board[getIdx(i)] = new Weight(0, i, true);
-
           if (numBlocked > 0) {
-            return new Weight(w, i, true);
+            choices.add(new Choice(numBlocked, new Weight(w, i, true)));
           }
         }
       }
+      if (choices.size() > 0) {
+        //Got some choices
+        Collections.sort(choices);
+        System.out.println("First part...");
+        return choices.get(0).w;
+      }
 
       //Step2: If not possible, use MinMax with priority on heavier weight
-      ArrayList<Choice> choices = new ArrayList<Choice>();
       for (int w = 15; w > 0; w--) {
         if (!availables[w]) continue;
         for (int i = -25; i <= 25; i++) {
@@ -180,7 +213,6 @@ class Contestant extends NoTippingPlayer {
           }
         }
       }
-      System.out.println("Lose...");
       return new Weight(0, 0, true);
     }
 
@@ -326,6 +358,16 @@ class Contestant extends NoTippingPlayer {
       }
     }
 
+    private int weightsOnBoard() {
+      int ret = 0;
+      for (int i = -25; i <= 25; i++) {
+        if (board[getIdx(i)].weight > 0)
+          ret++;
+      }
+
+      return ret;
+    }
+
     protected String process(String command) {
       if (strategy == null) {
         board = new Weight[52];
@@ -334,12 +376,13 @@ class Contestant extends NoTippingPlayer {
         }
 
         initFinalStates();
-        board[getIdx(-4)] = new Weight(3, -4, false);
+        board[getIdx(-4)] = new Weight(3, -4, true);
         availables = new boolean[16];
         for (int i = 0; i <= 15; i++) {
           availables[i] = true;
         }
         enemyWeights = new HashMap<Integer, Weight>();
+        addStage = true;
       }
       StringTokenizer tk = new StringTokenizer(command);
       command = tk.nextToken();
@@ -353,7 +396,13 @@ class Contestant extends NoTippingPlayer {
           board[getIdx(position)] = new Weight(weight, position, false);
           enemyWeights.put(weight, new Weight(weight, position, false));
         } else {
-          board[getIdx(position)] = new Weight(0, position, false);
+          if (addStage && firstPlayer && weightsOnBoard() == 29) {
+            addStage = false;
+            board[getIdx(position)] = new Weight(weight, position, false);
+          } else {
+            board[getIdx(position)] = new Weight(0, position, false);
+            enemyWeights.remove(weight);
+          }
         }
       }
 
@@ -363,6 +412,8 @@ class Contestant extends NoTippingPlayer {
         availables[strategy.weight] = false;
       } else {
         strategy = removeWeight();
+        board[getIdx(strategy.position)] = new Weight(0, strategy.position, false);
+        availables[strategy.weight] = true;
       }
 
       return strategy.position + " " + strategy.weight;
