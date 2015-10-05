@@ -54,6 +54,46 @@ class Contestant extends NoTippingPlayer {
       }
     }
 
+    private class MinMaxParam {
+      public int alpha; //Next move opponent has
+      public int beta; //Next move I have
+
+      public MinMaxParam(int alpha, int beta) {
+        this.alpha = alpha;
+        this.beta = beta;
+      }
+
+      public float getNumber() {
+        return alpha == 0 ? 0.f : ((float) beta) / alpha;
+      }
+    }
+
+    private void printBoard() {
+      System.out.println("Printing board...");
+      for (int i = -25; i <= 25; i++) {
+        System.out.println("Position: " + board[getIdx(i)].position + " : " + board[getIdx(i)].weight + " -> " + board[getIdx(i)].mine);
+      }
+    }
+
+    private class MinMaxChoice implements Comparable<MinMaxChoice> {
+      public float num;
+      public Weight w;
+
+      public MinMaxChoice(float num, Weight w) {
+        this.num = num;
+        this.w = w;
+      }
+
+      @Override
+      public int compareTo(MinMaxChoice c) {
+        if (this.num < c.num) {
+          return 1;
+        } else {
+          return -1;
+        }
+      }
+    }
+
     private boolean hasWeights() {
       for (int i = 1; i <= 15; i++) {
         if (availables[i])  return true;
@@ -78,36 +118,49 @@ class Contestant extends NoTippingPlayer {
         super(port);
     }
 
-    private int countNumMyMoves() {
-      int count = 0;
+    private MinMaxParam countNumMyMoves(int stage) {
+      int alpha = 0, beta = 0;
       for (int i = 25; i >= -25; i--) {
         if (board[getIdx(i)].weight > 0)  continue;
         for (int w = 15; w > 0; w--) {
-          if (!availables[w]) continue;
+          if (!availables[w])  continue;
           board[getIdx(i)] = new Weight(w, i, true);
           boolean gameNotOver = verifyGameNotOver();
-          board[getIdx(i)] = new Weight(0, i , false);
-          if (gameNotOver)  count++;
+          if (gameNotOver) {
+            beta++;
+          }
+
+          board[getIdx(i)] = new Weight(0, i, false);
         }
       }
 
-      return count;
+      return new MinMaxParam(alpha, beta);
     }
 
-    private int countNumEnemyMoves() {
-      int count = 0;
+    private MinMaxParam countNumEnemyMoves(int stage) {
+      int alpha = 0, beta = 0;
       for (int i = -25; i <= 25; i++) {
         if (board[getIdx(i)].weight > 0)  continue;
         for (int w = 1; w <= 15; w++) {
           if (enemyWeights.get(w) != null)  continue;
+
           board[getIdx(i)] = new Weight(w, i, false);
           boolean gameNotOver = verifyGameNotOver();
+          if (gameNotOver) {
+            if (stage == 0) {
+              enemyWeights.put(w, new Weight(w, i, false));
+              MinMaxParam p = countNumMyMoves(stage+1);
+              enemyWeights.remove(w);
+              alpha += p.alpha + 1;
+              beta += p.beta;
+            }
+          }
+
           board[getIdx(i)] = new Weight(0, i, false);
-          if (gameNotOver)  count++;
         }
       }
 
-      return count;
+      return new MinMaxParam(alpha, beta);
     }
 
     private Weight firstPlayerAdd() {
@@ -137,6 +190,7 @@ class Contestant extends NoTippingPlayer {
               board[getIdx(pos)] = new Weight(0, pos, false);
             }
           }
+          board[getIdx(i)] = new Weight(0, i, false);
           if (numBlocked > 0) {
             choices.add(new Choice(numBlocked, new Weight(w, i, true)));
           }
@@ -150,69 +204,43 @@ class Contestant extends NoTippingPlayer {
       }
 
       //Step2: If not possible, use MinMax with priority on heavier weight
+      ArrayList<MinMaxChoice> minMaxChoices = new ArrayList<MinMaxChoice>();
       for (int w = 15; w > 0; w--) {
         if (!availables[w]) continue;
         for (int i = -25; i <= 25; i++) {
           if (board[getIdx(i)].weight > 0)  continue;
-          board[getIdx(i)] = new Weight(w, i, true);
-          boolean gameOver = !verifyGameNotOver();
-          board[getIdx(i)] = new Weight(0, i, false);
-          if (gameOver) continue;
 
-          int count = 0;
           board[getIdx(i)] = new Weight(w, i, true);
-          availables[w] = false;
-          for (int enemy_w = 15; enemy_w > 0; enemy_w--) {
-            if (enemyWeights.get(enemy_w) != null)  continue;
-            for (int enemy_i = -25; enemy_i <= 25; enemy_i++) {
-              if (board[getIdx(enemy_i)].weight > 0)  continue;
-              board[getIdx(enemy_i)] = new Weight(enemy_w, enemy_i, false);
-              boolean enemyDone = !verifyGameNotOver();
-              board[getIdx(enemy_i)] = new Weight(0, enemy_i, false);
-              if (enemyDone)  continue;//TODO
-
-              board[getIdx(enemy_i)] = new Weight(enemy_w, enemy_i, false);
-              for (int w2 = 15; w2 > 0; w2--) {
-                if (!availables[w2]) continue;
-                for (int i2 = -25; i2 <= 25; i2++) {
-                  if (board[getIdx(i2)].weight > 0) continue;
-                  board[getIdx(i2)] = new Weight(w2, i2, true);
-                  boolean secondDone = verifyGameNotOver();
-                  board[getIdx(i2)] = new Weight(0, i2, false);
-                  if (secondDone) {
-                    count++;
-                  }
-                }
-              }
-              board[getIdx(enemy_i)] = new Weight(0, enemy_i, false);
-            }
+          boolean gameNotOver = verifyGameNotOver();
+          if (gameNotOver) {
+            availables[w] = false;
+            MinMaxParam p = countNumEnemyMoves(0);
+            availables[w] = true;
+            minMaxChoices.add(new MinMaxChoice(p.getNumber() * ((float) Math.sqrt(w)), new Weight(w, i, true)));
           }
           board[getIdx(i)] = new Weight(0, i, false);
-          availables[w] = true;
-          if (count > 0) {
-            choices.add(new Choice(count, new Weight(w, i, true)));
-          }
         }
       }
-      Collections.sort(choices);
-
-      if (choices.size() > 0) {
-        return choices.get(0).w;
+      if (minMaxChoices.size() > 0) {
+        Collections.sort(minMaxChoices);
+        return minMaxChoices.get(0).w;
       } else {
-        for (int w = 1; w <= 15; w++) {
+        System.out.println("Last resort...");
+        for (int w = 15; w > 0; w--) {
           if (!availables[w]) continue;
-          for (int i = -25; i <= 25; i++) {
+          for (int i = -25; i <=25; i++) {
             if (board[getIdx(i)].weight > 0)  continue;
+
             board[getIdx(i)] = new Weight(w, i, true);
             boolean gameNotOver = verifyGameNotOver();
             board[getIdx(i)] = new Weight(0, i, false);
-
             if (gameNotOver) {
               return new Weight(w, i, true);
             }
           }
         }
       }
+      System.out.println("Lose...");
       return new Weight(0, 0, true);
     }
 
