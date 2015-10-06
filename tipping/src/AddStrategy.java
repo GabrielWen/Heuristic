@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.HashMap;
 import java.util.Collections;
 
-class Contestant extends NoTippingPlayer {
+class AddStrategy {
     private static BufferedReader br;
     private Weight[] board;
     private HashMap finalState;
@@ -109,6 +109,9 @@ class Contestant extends NoTippingPlayer {
           left_torque -= (board[getIdx(i)].position - (-3)) * board[getIdx(i)].weight;
           right_torque -= (board[getIdx(i)].position - (-1)) * board[getIdx(i)].weight;
         }
+        //Board itself
+        left_torque -= 3 * 3;
+        right_torque -= 1 * 3;
 
         boolean gameOver = (left_torque > 0 || right_torque < 0);
         return !gameOver;
@@ -124,10 +127,6 @@ class Contestant extends NoTippingPlayer {
         System.out.println("Left: " + left_torque + " Right: " + right_torque);
     }
 
-    Contestant(int port) {
-        super(port);
-    }
-
     private MinMaxParam countNumMyMoves(int stage) {
       int alpha = 0, beta = 0;
       for (int i = 25; i >= -25; i--) {
@@ -136,11 +135,10 @@ class Contestant extends NoTippingPlayer {
           if (!availables[w])  continue;
           board[getIdx(i)] = new Weight(w, i, true);
           boolean gameNotOver = verifyGameNotOver();
+          board[getIdx(i)] = new Weight(0, i, false);
           if (gameNotOver) {
             beta++;
           }
-
-          board[getIdx(i)] = new Weight(0, i, false);
         }
       }
 
@@ -228,7 +226,6 @@ class Contestant extends NoTippingPlayer {
       if (choices.size() > 0) {
         //Got some choices
         Collections.sort(choices);
-        System.out.println("First part...");
         return choices.get(0).w;
       }
 
@@ -368,59 +365,34 @@ class Contestant extends NoTippingPlayer {
       return ret;
     }
 
-    protected String process(String command) {
-      if (strategy == null) {
-        board = new Weight[52];
-        for (int i = -25; i <= 25; i++) {
-          board[getIdx(i)] = new Weight(0, i, false);
-        }
-
-        initFinalStates();
-        board[getIdx(-4)] = new Weight(3, -4, true);
-        availables = new boolean[16];
-        for (int i = 0; i <= 15; i++) {
-          availables[i] = true;
-        }
-        enemyWeights = new HashMap<Integer, Weight>();
-        addStage = true;
-      }
-      StringTokenizer tk = new StringTokenizer(command);
-      command = tk.nextToken();
-      int position = Integer.parseInt(tk.nextToken());
-      int weight = Integer.parseInt(tk.nextToken());
-
+    public String process(int position, int weight) {
       if (position == 0 && weight == 0) {
         firstPlayer = true;
       } else {
-        if (command.equals("ADDING")) {
-          board[getIdx(position)] = new Weight(weight, position, false);
-          enemyWeights.put(weight, new Weight(weight, position, false));
-        } else {
-          if (addStage && firstPlayer && weightsOnBoard() == 29) {
-            addStage = false;
-            board[getIdx(position)] = new Weight(weight, position, false);
-          } else {
-            board[getIdx(position)] = new Weight(0, position, false);
-            enemyWeights.remove(weight);
-          }
-        }
+        board[getIdx(position)] = new Weight(weight, position, false);
+        enemyWeights.put(weight, new Weight(weight, position, false));
       }
 
-      if (command.equals("ADDING")) {
-        strategy = addWeight();
-        board[getIdx(strategy.position)] = strategy;
-        availables[strategy.weight] = false;
-      } else {
-        strategy = removeWeight();
-        board[getIdx(strategy.position)] = new Weight(0, strategy.position, false);
-        availables[strategy.weight] = true;
-      }
+      strategy = addWeight();
+      board[getIdx(strategy.position)] = strategy;
+      availables[strategy.weight] = false;
 
       return strategy.position + " " + strategy.weight;
     }
 
-    public static void main(String[] args) throws Exception {
-        br = new BufferedReader(new InputStreamReader(System.in));
-        new Contestant(Integer.parseInt(args[0]));
+    AddStrategy() {
+      this.board = new Weight[52];
+      for (int i = -25; i <= 25; i++) {
+        this.board[getIdx(i)] = new Weight(0, i, false);
+      }
+
+      initFinalStates();
+      this.board[getIdx(-4)] = new Weight(3, -4, true);
+      this.availables = new boolean[16];
+      for (int i = 0; i <= 15; i++) {
+        this.availables[i] = true;
+      }
+      this.enemyWeights = new HashMap<Integer, Weight>();
+      this.addStage = true;
     }
 }
