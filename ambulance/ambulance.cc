@@ -88,10 +88,6 @@ bool checkIdentical(cluster a, cluster b) {
   return true;
 }
 
-/**
-TODO:
-2. Take reachable patients into consideration
-*/
 void runKMeans(vector<cluster> &groups, vector<patient> &patients) {
   vector<cluster> newGroups;
   for (int i = 0; i < groups.size(); i++) {
