@@ -36,10 +36,11 @@ struct hospital {
   int numAmbulance;
 
   hospital(int i, int a):id(i), numAmbulance(a) {};
+  hospital() {};
 };
 
 struct cluster {
-  hospital *centroid;
+  hospital centroid;
   set<int> nearPatients;
 };
 
@@ -55,6 +56,9 @@ bool hospitalComp(hospital a, hospital b) {
   return a.numAmbulance > b.numAmbulance;
 }
 
+bool clusterComp(cluster a, cluster b) {
+  return a.nearPatients.size() > b.nearPatients.size();
+}
 //-------- K-Means -------------
 void updateCentroid(cluster c, vector<patient> patients) {
   int xSum = 0, ySum = 0;
@@ -64,8 +68,8 @@ void updateCentroid(cluster c, vector<patient> patients) {
     ySum += patients[*it].y;
   }
   if (c.nearPatients.size()) {
-    c.centroid->x = xSum / c.nearPatients.size();
-    c.centroid->y = ySum / c.nearPatients.size();
+    c.centroid.x = xSum / c.nearPatients.size();
+    c.centroid.y = ySum / c.nearPatients.size();
   }
 }
 
@@ -86,8 +90,7 @@ bool checkIdentical(cluster a, cluster b) {
 
 /**
 TODO:
-1. Take ambulance count into consideration
-2. Take reackable patients into consideration
+2. Take reachable patients into consideration
 */
 void runKMeans(vector<cluster> &groups, vector<patient> &patients) {
   vector<cluster> newGroups;
@@ -100,7 +103,7 @@ void runKMeans(vector<cluster> &groups, vector<patient> &patients) {
   for (int i = 0; i < patients.size(); i++) {
     int minDist = INT_MAX, newGIdx = -1;
     for (int g = 0; g < newGroups.size(); g++) {
-      int dis = dist(newGroups[g].centroid->x, newGroups[g].centroid->y, patients[i].x, patients[i].y);
+      int dis = dist(newGroups[g].centroid.x, newGroups[g].centroid.y, patients[i].x, patients[i].y);
       if (dis < minDist) {
         minDist = dis;
         newGIdx = g;
@@ -159,19 +162,26 @@ int main() {
   }
   sort(patients.begin(), patients.end(), patientComp);
   sort(hospitals.begin(), hospitals.end(), hospitalComp);
-  for (int i = 0; i < (patients.size() > hospitals.size() ? hospitals.size() : patients.size()); i++) {
-    hospitals[i].x = patients[i].x;
-    hospitals[i].y = patients[i].y;
-  }
 
   //KMeans stage
   vector<cluster> groups;
   for (int i = 0; i < hospitals.size(); i++) {
     cluster c;
-    c.centroid = &hospitals[i];
+    if (i < patients.size()) {
+      c.centroid.x = patients[i].x;
+      c.centroid.y = patients[i].y;
+    } else {
+      c.centroid.x = 0;
+      c.centroid.y = 0;
+    }
     groups.push_back(c);
   }
   runKMeans(groups, patients);
-  
+  sort(groups.begin(), groups.end(), clusterComp);
+  for (int i = 0; i < groups.size(); i++) {
+    hospitals[i].x = groups[i].centroid.x;
+    hospitals[i].y = groups[i].centroid.y;
+  }
+
   return 0;
 }
