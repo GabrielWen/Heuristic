@@ -58,10 +58,11 @@ struct ambulance {
   int startY;
   int endX;
   int endY;
+  int now;
   vector<int> patientsIds;
   vector<int> saved;
 
-  ambulance(int i, int x, int y): id(i), startX(x), startY(y), endX(x), endY(y) {};
+  ambulance(int i, int x, int y): id(i), startX(x), startY(y), endX(x), endY(y), now(0) {};
 };
 
 int dist(int x1, int y1, int x2, int y2) {
@@ -227,7 +228,7 @@ bool someoneWillDie(ambulance truck, int now, patient p, vector<hospital> hospit
 }
 
 void onNoOneCanBeSaved(ambulance &truck, vector<hospital> hospitals) {
-  if (!truck.patientsIds.size()) {
+  if (truck.patientsIds.size()) {
     unload(truck, hospitals);
   }
 }
@@ -241,24 +242,44 @@ bool ambulanceFull(ambulance &truck, int &now, vector<hospital> hospitals) {
   return false;
 }
 
+int nextIdx(vector<pair<float, int> > candidates) {
+  int p = candidates.size() - 1;
+  float pick = (rand() % 100) / 100.f;
+  for (int i = 0; i < candidates.size(); i++) {
+    if (pick < candidates[i].first) {
+      p = i;
+      break;
+    } else {
+      pick -= candidates[i].first;
+    }
+  }
+  return candidates[p].second;
+}
+
+vector<pair<float, int> > generateCandidates(ambulance truck, int now, vector<patient> patients, map<int, float> pheromones) {
+  vector<pair<float, int> > candidates;
+  for (int p = 0; p < patients.size(); p++) {
+    if (patients[p].saved)  continue;
+    int distance = dist(truck.endX, truck.endY, patients[p].x, patients[p].y);
+    if (distance * 2 + 2 + now > patients[p].time)  continue;
+
+    float newProb = getProb(pheromones[p], distance, patients[p].time - now);
+    candidates.push_back(make_pair(newProb, p));
+  }
+
+  return candidates;
+}
+
 vector<ambulance> scheduling(vector<ambulance> trucks, vector<hospital> hospitals, vector<patient> patients, map<int, float> pheromones) {
   for (int t = 0; t < trucks.size(); t++) {
     int now = 0;
     while (1) {
       if (ambulanceFull(trucks[t], now, hospitals)) continue;
 
-      vector<pair<float, int> > candidates;
-      int minDist = INT_MAX;
+      vector<pair<float, int> > candidates = generateCandidates(trucks[t], now, patients, pheromones);
       float totalProb = 0.f;
-      for (int p = 0; p < patients.size(); p++) {
-        if (patients[p].saved) continue;
-        int distance = dist(trucks[t].endX, trucks[t].endY, patients[p].x, patients[p].y);
-        if (distance * 2 + 2 + now > patients[p].time)  continue;//Filter out impossible patients
-
-        minDist = min(distance, minDist);
-        float newProb = getProb(pheromones[p], distance, patients[p].time - now);
-        totalProb += newProb;
-        candidates.push_back(make_pair(newProb, p));
+      for (int c = 0; c < candidates.size(); c++) {
+        totalProb += candidates[c].first;
       }
 
       //Stop if no one can be saved anymore
@@ -272,17 +293,7 @@ vector<ambulance> scheduling(vector<ambulance> trucks, vector<hospital> hospital
         candidates[i] = make_pair(candidates[i].first / totalProb, candidates[i].second);
       }
       sort(candidates.begin(), candidates.end(), candidateComp);
-      float pick = (rand() % 100) / 100.f;
-      int p = candidates.size() - 1;
-      for (int i = 0; i < candidates.size(); i++) {
-        if (pick < candidates[i].first) {
-          p = i;
-          break;
-        } else {
-          pick -= candidates[i].first;
-        }
-      }
-      p = candidates[p].second;
+      int p = nextIdx(candidates);
       if (trucks[t].patientsIds.size() && someoneWillDie(trucks[t], now, patients[p], hospitals, patients)) {
         now += unload(trucks[t], hospitals);
       } else {
@@ -298,6 +309,63 @@ vector<ambulance> scheduling(vector<ambulance> trucks, vector<hospital> hospital
   return trucks;
 }
 
+vector<int> generateSeq(int size) {
+  set<int> unique;
+  vector<int> ret;
+
+  while (unique.size() < size) {
+    int n = rand() % size;
+    if (!unique.count(n)) {
+      unique.insert(n);
+      ret.push_back(n);
+    }
+  }
+
+  return ret;
+}
+
+vector<ambulance> schedulingAll(vector<ambulance> trucks, vector<hospital> hospitals, vector<patient> patients, map<int, float> pheromones) {
+  while (1) {
+    int done = 0;
+    vector<int> seq = generateSeq(trucks.size());
+    for (int i = 0; i < seq.size(); i++) {
+      int t = seq[i];
+      if (ambulanceFull(trucks[t], trucks[t].now, hospitals)) continue;
+
+      vector<pair<float, int> > candidates = generateCandidates(trucks[t], trucks[t].now, patients, pheromones);
+      if (!candidates.size()) {
+        onNoOneCanBeSaved(trucks[t], hospitals);
+        done++;
+        continue;
+      }
+
+      float totalProb = 0.f;
+      for (int c = 0; c < candidates.size(); c++) {
+        totalProb += candidates[c].first;
+      }
+
+      for (int c = 0; c < candidates.size(); c++) {
+        candidates[c] = make_pair(candidates[c].first / totalProb, candidates[c].second);
+      }
+      sort(candidates.begin(), candidates.end(), candidateComp);
+      int p = nextIdx(candidates);
+      if (trucks[t].patientsIds.size() && someoneWillDie(trucks[t], trucks[t].now, patients[p], hospitals, patients)) {
+        trucks[t].now += unload(trucks[t], hospitals);
+      } else {
+        trucks[t].now += dist(trucks[t].endX, trucks[t].endY, patients[p].x, patients[p].y);
+        trucks[t].endX = patients[p].x;
+        trucks[t].endY = patients[p].y;
+        patients[p].saved = true;
+        trucks[t].patientsIds.push_back(p);
+      }
+    }
+
+    if (done == trucks.size())  break;
+  }
+
+  return trucks;
+}
+
 vector<ambulance> antColonyAlgo(vector<ambulance> trucks, vector<hospital> hospitals, vector<patient> patients) {
   map<int, float> pheromones; //Patient Id to amount of pheromones
   for (int i = 0; i < patients.size(); i++) {
@@ -307,7 +375,8 @@ vector<ambulance> antColonyAlgo(vector<ambulance> trucks, vector<hospital> hospi
   int maxRescued = 0;
   vector<ambulance> bestRoute;
   for (int ant = 0; ant < numAnts; ant++) {
-    vector<ambulance> newRoute = scheduling(trucks, hospitals, patients, pheromones);
+    //vector<ambulance> newRoute = scheduling(trucks, hospitals, patients, pheromones);
+    vector<ambulance> newRoute = schedulingAll(trucks, hospitals, patients, pheromones);
     int rescued = numRescued(newRoute);
     updatePheromones(newRoute, pheromones, rescued);
 
