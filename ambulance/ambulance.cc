@@ -179,19 +179,19 @@ float getProb(float pheromone, int distance, int timeToLive) {
   return pow(pheromone, alpha) * pow(1.f/distance, beta) * (1.f/timeToLive);
 }
 
-int unload(ambulance &truck, int &x, int &y, vector<hospital> hospitals) {
+int unload(ambulance &truck, vector<hospital> hospitals) {
   int minDist = INT_MAX;
   int hospitalIdx = -1;
   for (int i = 0; i < hospitals.size(); i++) {
-    int distance = dist(x, y, hospitals[i].x, hospitals[i].y);
+    int distance = dist(truck.endX, truck.endY, hospitals[i].x, hospitals[i].y);
     if (distance < minDist) {
       minDist = distance;
       hospitalIdx = i;
     }
   }
 
-  x = hospitals[hospitalIdx].x;
-  y = hospitals[hospitalIdx].y;
+  truck.endX = hospitals[hospitalIdx].x;
+  truck.endY = hospitals[hospitalIdx].y;
 
   for (int i = 0; i < truck.patientsIds.size(); i++) {
     truck.saved.push_back(truck.patientsIds[i]);
@@ -205,8 +205,8 @@ bool candidateComp(pair<float, int> a, pair<float, int> b) {
   return a.first < b.first;
 }
 
-bool someoneWillDie(ambulance truck, int now, int x, int y, patient p, vector<hospital> hospitals, vector<patient> patients) {
-  int pickup = dist(x, y, p.x, p.y);
+bool someoneWillDie(ambulance truck, int now, patient p, vector<hospital> hospitals, vector<patient> patients) {
+  int pickup = dist(truck.endX, truck.endY, p.x, p.y);
   int minTime = INT_MAX;
   for (int i = 0; i < truck.patientsIds.size(); i++) {
     int id = truck.patientsIds[i];
@@ -226,21 +226,33 @@ bool someoneWillDie(ambulance truck, int now, int x, int y, patient p, vector<ho
   }
 }
 
+void onNoOneCanBeSaved(ambulance &truck, vector<hospital> hospitals) {
+  if (!truck.patientsIds.size()) {
+    unload(truck, hospitals);
+  }
+}
+
+bool ambulanceFull(ambulance &truck, int &now, vector<hospital> hospitals) {
+  if (truck.patientsIds.size() >= 4) {
+    now += unload(truck, hospitals);
+    return true;
+  }
+
+  return false;
+}
+
 vector<ambulance> scheduling(vector<ambulance> trucks, vector<hospital> hospitals, vector<patient> patients, map<int, float> pheromones) {
   for (int t = 0; t < trucks.size(); t++) {
-    int now = 0, x = trucks[t].startX, y = trucks[t].startY;
+    int now = 0;
     while (1) {
-      if (trucks[t].patientsIds.size() >= 4) {
-        now += unload(trucks[t], x, y, hospitals);
-        continue;
-      }
+      if (ambulanceFull(trucks[t], now, hospitals)) continue;
 
       vector<pair<float, int> > candidates;
       int minDist = INT_MAX;
       float totalProb = 0.f;
       for (int p = 0; p < patients.size(); p++) {
         if (patients[p].saved) continue;
-        int distance = dist(x, y, patients[p].x, patients[p].y);
+        int distance = dist(trucks[t].endX, trucks[t].endY, patients[p].x, patients[p].y);
         if (distance * 2 + 2 + now > patients[p].time)  continue;//Filter out impossible patients
 
         minDist = min(distance, minDist);
@@ -251,28 +263,9 @@ vector<ambulance> scheduling(vector<ambulance> trucks, vector<hospital> hospital
 
       //Stop if no one can be saved anymore
       if (!candidates.size()) {
-        if (trucks[t].patientsIds.size()) {
-          unload(trucks[t], x, y, hospitals);
-        }
-
-        trucks[t].endX = x;
-        trucks[t].endY = y;
+        onNoOneCanBeSaved(trucks[t], hospitals);
         break;
       }
-
-      //Unload if someone is dying
-      bool unloaded = false;
-      if (trucks[t].patientsIds.size()) {
-        for (int i = 0; i < trucks[t].patientsIds.size(); i++) {
-          int id = trucks[t].patientsIds[i];
-          if (patients[id].time < now + (minDist * 2)) {
-            now += unload(trucks[t], x, y, hospitals);
-            unloaded = true;
-            break;
-          }
-        }
-      }
-      if (unloaded) continue;
 
       //Pick one and proceed
       for (int i = 0; i < candidates.size(); i++) {
@@ -290,12 +283,12 @@ vector<ambulance> scheduling(vector<ambulance> trucks, vector<hospital> hospital
         }
       }
       p = candidates[p].second;
-      if (trucks[t].patientsIds.size() && someoneWillDie(trucks[t], now, x, y, patients[p], hospitals, patients)) {
-        now += unload(trucks[t], x, y, hospitals);
+      if (trucks[t].patientsIds.size() && someoneWillDie(trucks[t], now, patients[p], hospitals, patients)) {
+        now += unload(trucks[t], hospitals);
       } else {
-        now += dist(x, y, patients[p].x, patients[p].y);
-        x = patients[p].x;
-        y = patients[p].y;
+        now += dist(trucks[t].endX, trucks[t].endY, patients[p].x, patients[p].y);
+        trucks[t].endX = patients[p].x;
+        trucks[t].endY = patients[p].y;
         patients[p].saved = true;
         trucks[t].patientsIds.push_back(p);
       }
