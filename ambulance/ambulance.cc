@@ -20,11 +20,11 @@
 
 using namespace std;
 
-const int numAnts = 10;
+const int numAnts = 1000;
 const float alpha = 0.1;
 const float beta = 9.f;
 const float initPhe = 1.f;
-const float Q = 1e-4;
+const float Q = 5;
 const float P = 0.8;
 
 struct patient {
@@ -97,7 +97,6 @@ bool checkIdentical(cluster a, cluster b) {
     return false;
   }
 
-  //TODO: Might need to update
   set<int>::iterator it;
   for (it = a.nearPatients.begin(); it != a.nearPatients.end(); it++) {
     if (!b.nearPatients.count(*it)) {
@@ -164,7 +163,15 @@ int numRescued(vector<ambulance> trucks) {
 }
 
 void updatePheromones(vector<ambulance> trucks, map<int, float> &pheromones, int numRescued) {
-//TODO
+  for (int t = 0; t < trucks.size(); t++) {
+    for (int p = 0; p < trucks[t].patientsIds.size(); p++) {
+      if (pheromones.find(trucks[t].patientsIds[p]) == pheromones.end()) {
+        pheromones[trucks[t].patientsIds[p]] = initPhe;
+      } else {
+        pheromones[trucks[t].patientsIds[p]] = newPhe(pheromones[trucks[t].patientsIds[p]], Q * numRescued);
+      }
+    }
+  }
 }
 
 float getProb(float pheromone, int distance, int timeToLive) {
@@ -322,9 +329,8 @@ vector<ambulance> antColonyAlgo(vector<ambulance> trucks, vector<hospital> hospi
   return bestRoute;
 }
 
-// --------- Utilities ------------
-
 int main() {
+  srand(time(NULL));
   vector<patient> patients;
   vector<hospital> hospitals;
 
