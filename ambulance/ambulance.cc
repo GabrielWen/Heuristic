@@ -20,7 +20,7 @@
 
 using namespace std;
 
-const int numAnts = 1000;
+const int numAnts = 100;
 const float alpha = 0.1;
 const float beta = 9.f;
 const float initPhe = 1.f;
@@ -59,6 +59,7 @@ struct ambulance {
   int endX;
   int endY;
   vector<int> patientsIds;
+  vector<int> saved;
 
   ambulance(int i, int x, int y): id(i), startX(x), startY(y), endX(x), endY(y) {};
 };
@@ -156,7 +157,7 @@ int numRescued(vector<ambulance> trucks) {
   int ret = 0;
 
   for (int i = 0; i < trucks.size(); i++) {
-    ret += trucks[i].patientsIds.size();
+    ret += trucks[i].saved.size();
   }
 
   return ret;
@@ -178,7 +179,7 @@ float getProb(float pheromone, int distance, int timeToLive) {
   return pow(pheromone, alpha) * pow(1.f/distance, beta) * (1.f/timeToLive);
 }
 
-int unload(ambulance &truck, int &x, int &y, vector<hospital> hospitals, vector<int> &rescued) {
+int unload(ambulance &truck, int &x, int &y, vector<hospital> hospitals) {
   int minDist = INT_MAX;
   int hospitalIdx = -1;
   for (int i = 0; i < hospitals.size(); i++) {
@@ -193,7 +194,7 @@ int unload(ambulance &truck, int &x, int &y, vector<hospital> hospitals, vector<
   y = hospitals[hospitalIdx].y;
 
   for (int i = 0; i < truck.patientsIds.size(); i++) {
-    rescued.push_back(truck.patientsIds[i]);
+    truck.saved.push_back(truck.patientsIds[i]);
   }
   truck.patientsIds = vector<int>();
 
@@ -228,10 +229,9 @@ bool someoneWillDie(ambulance truck, int now, int x, int y, patient p, vector<ho
 vector<ambulance> scheduling(vector<ambulance> trucks, vector<hospital> hospitals, vector<patient> patients, map<int, float> pheromones) {
   for (int t = 0; t < trucks.size(); t++) {
     int now = 0, x = trucks[t].startX, y = trucks[t].startY;
-    vector<int> rescued;
     while (1) {
       if (trucks[t].patientsIds.size() >= 4) {
-        now += unload(trucks[t], x, y, hospitals, rescued);
+        now += unload(trucks[t], x, y, hospitals);
         continue;
       }
 
@@ -252,7 +252,7 @@ vector<ambulance> scheduling(vector<ambulance> trucks, vector<hospital> hospital
       //Stop if no one can be saved anymore
       if (!candidates.size()) {
         if (trucks[t].patientsIds.size()) {
-          unload(trucks[t], x, y, hospitals, rescued);
+          unload(trucks[t], x, y, hospitals);
         }
 
         trucks[t].endX = x;
@@ -266,7 +266,7 @@ vector<ambulance> scheduling(vector<ambulance> trucks, vector<hospital> hospital
         for (int i = 0; i < trucks[t].patientsIds.size(); i++) {
           int id = trucks[t].patientsIds[i];
           if (patients[id].time < now + (minDist * 2)) {
-            now += unload(trucks[t], x, y, hospitals, rescued);
+            now += unload(trucks[t], x, y, hospitals);
             unloaded = true;
             break;
           }
@@ -291,7 +291,7 @@ vector<ambulance> scheduling(vector<ambulance> trucks, vector<hospital> hospital
       }
       p = candidates[p].second;
       if (trucks[t].patientsIds.size() && someoneWillDie(trucks[t], now, x, y, patients[p], hospitals, patients)) {
-        now += unload(trucks[t], x, y, hospitals, rescued);
+        now += unload(trucks[t], x, y, hospitals);
       } else {
         now += dist(x, y, patients[p].x, patients[p].y);
         x = patients[p].x;
@@ -300,8 +300,6 @@ vector<ambulance> scheduling(vector<ambulance> trucks, vector<hospital> hospital
         trucks[t].patientsIds.push_back(p);
       }
     }
-
-    trucks[t].patientsIds = rescued;
   }
 
   return trucks;
@@ -391,9 +389,9 @@ int main() {
   vector<ambulance> test = antColonyAlgo(ambulances, hospitals, patients);
   int num = 0;
   for (int i = 0; i < test.size(); i++) {
-    num += test[i].patientsIds.size();
+    num += test[i].saved.size();
     printf("Ambulance%d: start(%d, %d) end(%d, %d) with %lu\n", i+1, test[i].startX, test[i].startY,
-                                                        test[i].endX, test[i].endY, test[i].patientsIds.size());
+                                                        test[i].endX, test[i].endY, test[i].saved.size());
   }
   printf("Total: %d\n", num);
 
