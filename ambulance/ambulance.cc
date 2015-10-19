@@ -20,13 +20,21 @@
 
 using namespace std;
 
+const int numAnts = 100;
+const float alpha = 0.1;
+const float beta = 9.f;
+const float initPhe = 1.f;
+const float Q = 1e-4;
+const float P = 0.8;
+
 struct patient {
   int id;
   int x;
   int y;
   int time;
+  bool saved;
 
-  patient(int i, int X, int Y, int t):id(i), x(X), y(Y), time(t) {};
+  patient(int i, int X, int Y, int t):id(i), x(X), y(Y), time(t), saved(false) {};
 };
 
 struct hospital {
@@ -42,6 +50,17 @@ struct hospital {
 struct cluster {
   hospital centroid;
   set<int> nearPatients;
+};
+
+struct ambulance {
+  int id;
+  int startX;
+  int startY;
+  int endX;
+  int endY;
+  vector<int> patientsIds;
+
+  ambulance(int i, int x, int y): id(i), startX(x), startY(y), endX(x), endY(y) {};
 };
 
 int dist(int x1, int y1, int x2, int y2) {
@@ -78,6 +97,7 @@ bool checkIdentical(cluster a, cluster b) {
     return false;
   }
 
+  //TODO: Might need to update
   set<int>::iterator it;
   for (it = a.nearPatients.begin(); it != a.nearPatients.end(); it++) {
     if (!b.nearPatients.count(*it)) {
@@ -128,6 +148,88 @@ void runKMeans(vector<cluster> &groups, vector<patient> &patients) {
   }
 }
 
+// ----------- ACO -----------------
+/**
+TODO:
+1. Reachable function
+2. Attractive function
+3. Pheromone function
+*/
+float newPhe(float pheromone, float added) {
+  return (1.f - P) * pheromone + added;
+}
+
+int numRescued(vector<ambulance> trucks) {
+  int ret = 0;
+
+  for (int i = 0; i < trucks.size(); i++) {
+    ret += trucks[i].patientsIds.size();
+  }
+
+  return ret;
+}
+
+void updatePheromones(vector<ambulance> trucks, map<int, float> &pheromones, int numRescued) {
+
+}
+
+float getProb(float pheromone, int distance, int timeToLive) {
+  return pow(pheromone, alpha) * pow(1.f/distance, beta) * (1.f/timeToLive);
+}
+
+vector<ambulance> scheduling(vector<ambulance> trucks, vector<hospital> hospitals, vector<patient> patients, map<int, float> pheromones) {
+  for (int t = 0; t < trucks.size(); t++) {
+    int now = 0, x = trucks[t].startX, y = trucks[t].startY;
+    while (1) {
+      if (trucks[t].patientsIds.size() >= 4) {
+        //TODO: Unload
+        continue;
+      }
+      //TODO: Unload if someone on truck is dying
+
+      vector<pair<float, int> > candidates;
+      for (int p = 0; p < patients.size(); p++) {
+        if (patients[p].saved) continue;
+        int distance = dist(x, y, patients[p].x, patients[p].y);
+        if (distance * 2 + 2 + now > patients[p].time)  continue;//Filter out impossible patients
+
+        int id = patients[p].id;
+        candidates.push_back(make_pair(getProb(pheromones[id], distance, patients[p].time - now), id));
+      }
+
+      if (!candidates.size()) break;
+
+      //TODO: Pick and update
+    }
+  }
+
+  return trucks;
+}
+
+vector<ambulance> antColonyAlgo(vector<ambulance> trucks, vector<hospital> hospitals, vector<patient> patients) {
+  map<int, float> pheromones; //Patient Id to amount of pheromones
+  for (int i = 0; i < patients.size(); i++) {
+    pheromones[i] = initPhe;
+  }
+
+  int maxRescued = 0;
+  vector<ambulance> bestRoute;
+  for (int ant = 0; ant < numAnts; ant++) {
+    vector<ambulance> newRoute = scheduling(trucks, hospitals, patients, pheromones);
+    int rescued = numRescued(newRoute);
+    updatePheromones(newRoute, pheromones, rescued);
+
+    if (rescued > maxRescued) {
+      maxRescued = rescued;
+      bestRoute = newRoute;
+    }
+  }
+
+  return bestRoute;
+}
+
+// --------- Utilities ------------
+
 int main() {
   vector<patient> patients;
   vector<hospital> hospitals;
@@ -173,10 +275,16 @@ int main() {
     groups.push_back(c);
   }
   runKMeans(groups, patients);
+  vector<ambulance> ambulances;
+  int ambulanceId = 0;
   sort(groups.begin(), groups.end(), clusterComp);
   for (int i = 0; i < groups.size(); i++) {
     hospitals[i].x = groups[i].centroid.x;
     hospitals[i].y = groups[i].centroid.y;
+
+    for (int a = 0; a < hospitals[i].numAmbulance; a++) {
+      ambulances.push_back(ambulance(ambulanceId, hospitals[i].x, hospitals[i].y));
+    }
   }
 
   return 0;
