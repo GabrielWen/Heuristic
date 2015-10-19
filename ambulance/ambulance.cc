@@ -20,7 +20,7 @@
 
 using namespace std;
 
-const int numAnts = 100;
+const int numAnts = 10;
 const float alpha = 0.1;
 const float beta = 9.f;
 const float initPhe = 1.f;
@@ -149,12 +149,6 @@ void runKMeans(vector<cluster> &groups, vector<patient> &patients) {
 }
 
 // ----------- ACO -----------------
-/**
-TODO:
-1. Reachable function
-2. Attractive function
-3. Pheromone function
-*/
 float newPhe(float pheromone, float added) {
   return (1.f - P) * pheromone + added;
 }
@@ -170,37 +164,137 @@ int numRescued(vector<ambulance> trucks) {
 }
 
 void updatePheromones(vector<ambulance> trucks, map<int, float> &pheromones, int numRescued) {
-
+//TODO
 }
 
 float getProb(float pheromone, int distance, int timeToLive) {
   return pow(pheromone, alpha) * pow(1.f/distance, beta) * (1.f/timeToLive);
 }
 
+int unload(ambulance &truck, int &x, int &y, vector<hospital> hospitals, vector<int> &rescued) {
+  int minDist = INT_MAX;
+  int hospitalIdx = -1;
+  for (int i = 0; i < hospitals.size(); i++) {
+    int distance = dist(x, y, hospitals[i].x, hospitals[i].y);
+    if (distance < minDist) {
+      minDist = distance;
+      hospitalIdx = i;
+    }
+  }
+
+  x = hospitals[hospitalIdx].x;
+  y = hospitals[hospitalIdx].y;
+
+  for (int i = 0; i < truck.patientsIds.size(); i++) {
+    rescued.push_back(truck.patientsIds[i]);
+  }
+  truck.patientsIds = vector<int>();
+
+  return minDist + 1;
+}
+
+bool candidateComp(pair<float, int> a, pair<float, int> b) {
+  return a.first < b.first;
+}
+
+bool someoneWillDie(ambulance truck, int now, int x, int y, patient p, vector<hospital> hospitals, vector<patient> patients) {
+  int pickup = dist(x, y, p.x, p.y);
+  int minTime = INT_MAX;
+  for (int i = 0; i < truck.patientsIds.size(); i++) {
+    int id = truck.patientsIds[i];
+    minTime = min(patients[id].time - now - pickup, minTime);
+  }
+
+  if (minTime < 0)  return true;
+
+  int minDist = INT_MAX;
+  for (int i = 0; i < hospitals.size(); i++) {
+    minDist = min(minDist, dist(p.x, p.y, hospitals[i].x, hospitals[i].y));
+  }
+  if (minDist + 1 > minTime) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
 vector<ambulance> scheduling(vector<ambulance> trucks, vector<hospital> hospitals, vector<patient> patients, map<int, float> pheromones) {
   for (int t = 0; t < trucks.size(); t++) {
     int now = 0, x = trucks[t].startX, y = trucks[t].startY;
+    vector<int> rescued;
     while (1) {
       if (trucks[t].patientsIds.size() >= 4) {
-        //TODO: Unload
+        now += unload(trucks[t], x, y, hospitals, rescued);
         continue;
       }
-      //TODO: Unload if someone on truck is dying
 
       vector<pair<float, int> > candidates;
+      int minDist = INT_MAX;
+      float totalProb = 0.f;
       for (int p = 0; p < patients.size(); p++) {
         if (patients[p].saved) continue;
         int distance = dist(x, y, patients[p].x, patients[p].y);
         if (distance * 2 + 2 + now > patients[p].time)  continue;//Filter out impossible patients
 
-        int id = patients[p].id;
-        candidates.push_back(make_pair(getProb(pheromones[id], distance, patients[p].time - now), id));
+        minDist = min(distance, minDist);
+        float newProb = getProb(pheromones[p], distance, patients[p].time - now);
+        totalProb += newProb;
+        candidates.push_back(make_pair(newProb, p));
       }
 
-      if (!candidates.size()) break;
+      //Stop if no one can be saved anymore
+      if (!candidates.size()) {
+        if (trucks[t].patientsIds.size()) {
+          unload(trucks[t], x, y, hospitals, rescued);
+        }
 
-      //TODO: Pick and update
+        trucks[t].endX = x;
+        trucks[t].endY = y;
+        break;
+      }
+
+      //Unload if someone is dying
+      bool unloaded = false;
+      if (trucks[t].patientsIds.size()) {
+        for (int i = 0; i < trucks[t].patientsIds.size(); i++) {
+          int id = trucks[t].patientsIds[i];
+          if (patients[id].time < now + (minDist * 2)) {
+            now += unload(trucks[t], x, y, hospitals, rescued);
+            unloaded = true;
+            break;
+          }
+        }
+      }
+      if (unloaded) continue;
+
+      //Pick one and proceed
+      for (int i = 0; i < candidates.size(); i++) {
+        candidates[i] = make_pair(candidates[i].first / totalProb, candidates[i].second);
+      }
+      sort(candidates.begin(), candidates.end(), candidateComp);
+      float pick = (rand() % 100) / 100.f;
+      int p = candidates.size() - 1;
+      for (int i = 0; i < candidates.size(); i++) {
+        if (pick < candidates[i].first) {
+          p = i;
+          break;
+        } else {
+          pick -= candidates[i].first;
+        }
+      }
+      p = candidates[p].second;
+      if (trucks[t].patientsIds.size() && someoneWillDie(trucks[t], now, x, y, patients[p], hospitals, patients)) {
+        now += unload(trucks[t], x, y, hospitals, rescued);
+      } else {
+        now += dist(x, y, patients[p].x, patients[p].y);
+        x = patients[p].x;
+        y = patients[p].y;
+        patients[p].saved = true;
+        trucks[t].patientsIds.push_back(p);
+      }
     }
+
+    trucks[t].patientsIds = rescued;
   }
 
   return trucks;
@@ -286,6 +380,16 @@ int main() {
       ambulances.push_back(ambulance(ambulanceId, hospitals[i].x, hospitals[i].y));
     }
   }
+
+  //ACO Stage
+  vector<ambulance> test = antColonyAlgo(ambulances, hospitals, patients);
+  int num = 0;
+  for (int i = 0; i < test.size(); i++) {
+    num += test[i].patientsIds.size();
+    printf("Ambulance%d: start(%d, %d) end(%d, %d) with %lu\n", i+1, test[i].startX, test[i].startY,
+                                                        test[i].endX, test[i].endY, test[i].patientsIds.size());
+  }
+  printf("Total: %d\n", num);
 
   return 0;
 }
