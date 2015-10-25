@@ -10,4 +10,4 @@ qtreactor/
 qtreactor/dist/qt4reactor-1.6-py2.7.egg
 cython/
 genVoronoi.so
-
+.hg
