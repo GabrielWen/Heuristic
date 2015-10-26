@@ -83,6 +83,43 @@ cpdef generate_voronoi_diagram(
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
+cpdef get_pulls(int n_players, int n_moves, np.ndarray[np.int_t, ndim=3] points, int playerIdx):
+  cdef int px, py, a, b, x, y, p, m, i, max_i, j, k
+  for i in range(n_players):
+    for j in range(n_moves):
+      for k in range(2):
+        points_internal[i][j][k] = points[i,j,k]
+
+  cdef float myPulls, oppPulls
+  myPulls = 0.0
+  oppPulls = 0.0
+  for x in range(1000):
+    for y in range(1000):
+      for i in range(n_players):
+        pulls[i] = 0.0
+      for p in range(n_players):
+        for m in range(n_moves):
+          if points_internal[p][m][0] == -1:
+            break
+          px = points_internal[p][m][0]
+          if px > x:
+            a = px - x
+          else:
+            a = x - px
+          py = points_internal[p][m][1]
+          if py > y:
+            b = py - y
+          else:
+            b = y - py
+          pulls[p] += cache[a][b]
+        if p == playerIdx:
+          myPulls += pulls[p]
+        else:
+          oppPulls += pulls[p]
+  return myPulls - oppPulls
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
 cpdef get_scores(int n_players):
     cdef np.ndarray[np.int_t, ndim=1] scores_external = np.zeros([n_players], dtype=np.int)
     for x in range(1000):
