@@ -15,8 +15,51 @@ class MonteCarlo(object):
     self.myMoves = kwargs.get('myMoves', 10)
     self.oppMoves = kwargs.get('oppMoves', 10)
     self.numMoves = kwargs.get('numMoves', 10)
-    seconds = 110 / self.numMoves
+    seconds = 50 / self.numMoves
     self.calculation_time = datetime.timedelta(seconds=seconds)
+
+  def minmax_and_mcts(self):
+    minmaxScore, minmaxMove = self.minmax()
+    mctsScore, mctsMove = self.get_play()
+    return minmaxMove if minmaxScore > mctsScore else mctsMove
+
+  def minmax(self):
+    begin = datetime.datetime.utcnow()
+    maxDiff, currMove = 0, self.player.make_random_move()
+    maxScore = 0
+    while datetime.datetime.utcnow() - begin < self.calculation_time:
+      move = self.player.make_random_move()
+      self.player.updatePoints(self.player.playerIdx, self.myMoves, move[0], move[1])
+      myScore = self.player.get_score()[0]
+      if self.oppMoves >= self.numMoves:
+        oppAvgScore = 0
+      else:
+        oppAvgScore = self.one_level_minmax()
+      self.player.undoPoints(self.player.playerIdx, self.myMoves, move[0], move[1])
+      if myScore - oppAvgScore > maxDiff:
+        maxDiff = myScore - oppAvgScore
+        currMove = move
+      if myScore > maxScore:
+        maxScore = myScore
+
+    return maxScore, currMove
+
+  def one_level_minmax(self):
+    scores = 0
+    sampling = 20
+    for i in xrange(sampling):
+      move = self.player.make_random_move()
+      self.player.updatePoints(self.player.oppIdx, self.oppMoves, move[0], move[1])
+      score = self.player.get_score()[1]
+      scores = max(scores, score)
+      self.player.undoPoints(self.player.oppIdx, self.oppMoves, move[0], move[1])
+
+    return float(scores) / sampling
+
+  def mixed_play(self):
+    greedyScore, greedyMove = self.greedy_play()
+    mctsScore, mctsMove = self.get_play()
+    return greedyMove if greedyScore > mctsScore else mctsMove
 
   def greedy_play(self):
     begin = datetime.datetime.utcnow()
@@ -25,11 +68,12 @@ class MonteCarlo(object):
       move = self.player.make_random_move()
       self.player.updatePoints(self.player.playerIdx, self.myMoves, move[0], move[1])
       score = self.player.get_score()[0]
+      self.player.undoPoints(self.player.playerIdx, self.myMoves, move[0], move[1])
       if score > maxScore:
         maxScore = score
         currMove = move
 
-    return currMove
+    return maxScore, currMove
 
   def get_play(self):
     begin = datetime.datetime.utcnow()
@@ -46,7 +90,7 @@ class MonteCarlo(object):
       self.myMoves -= 1
       self.player.undoPoints(self.player.playerIdx, self.myMoves, move[0], move[1])
 
-    return currMove
+    return maxScore, currMove
 
   def run_simulation(self, myTurn):
     if self.myMoves >= self.numMoves and self.oppMoves >= self.numMoves:
@@ -123,8 +167,12 @@ class Player(Client):
                                   oppMoves = self.oppMoves,
                                   numMoves = self.numMoves)
 
-    print '{0} using greedy'.format(self.name)
-    move = simulation.greedy_play()
+    if self.playerIdx == 0:
+      print 'Using Mixed: {0}'.format(self.name)
+      move = simulation.mixed_play()
+    else:
+      print 'Using Minmax + MCTS: {0}'.format(self.name)
+      move = simulation.minmax_and_mcts()
 
     self.updatePoints(self.playerIdx, self.myMoves, move[0], move[1])
     genVoronoi.generate_voronoi_diagram(2, self.numMoves, self.points, self.colors, None, 0, 0)
