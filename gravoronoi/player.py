@@ -1,6 +1,7 @@
 import argparse
 import random
 import numpy as np
+import datetime
 
 from twisted.internet import reactor, protocol
 
@@ -8,8 +9,85 @@ import genVoronoi
 from client import Client, ClientFactory
 
 class MonteCarlo(object):
-  def __init__(self):
-    pass
+  def __init__(self, player, **kwargs):
+    self.player = player
+    self.myMoves = kwargs.get('myMoves', 10)
+    self.oppMoves = kwargs.get('oppMoves', 10)
+    self.numMoves = kwargs.get('numMoves', 10)
+    seconds = 110 / self.numMoves
+    self.calculation_time = datetime.timedelta(seconds=seconds)
+
+  def get_play(self):
+    begin = datetime.datetime.utcnow()
+    maxScore, currMove = 0, self.player.make_random_move()
+    while datetime.datetime.utcnow() - begin < self.calculation_time:
+      move = self.player.make_random_move()
+      self.player.updatePoints(self.player.playerIdx, self.myMoves, move[0], move[1])
+      self.myMoves += 1
+      score = self.run_simulation(False)
+      if score > maxScore:
+        maxScore = score
+        currMove = move
+      #Undo
+      self.myMoves -= 1
+      self.player.undoPoints(self.player.playerIdx, self.myMoves, move[0], move[1])
+
+    print '\n\nRET: {0} -> {1}'.format(maxScore, currMove)
+
+    return currMove
+
+  def run_simulation(self, myTurn):
+    if self.myMoves >= self.numMoves and self.oppMoves >= self.numMoves:
+      print 'Score: ' + str(self.player.get_score()[0])
+      return self.player.get_score()[0]
+
+    if myTurn:
+      numMove = self.myMoves
+      self.myMoves += 1
+      player = self.player.playerIdx
+    else:
+      numMove = self.oppMoves
+      self.oppMoves += 1
+      player = self.player.oppIdx
+
+    move = self.player.make_random_move()
+    self.player.updatePoints(player, numMove, move[0], move[1])
+    score = self.run_simulation(myTurn ^ True)
+    if myTurn:
+      self.myMoves -= 1
+    else:
+      self.oppMoves -= 1
+    self.player.undoPoints(player, numMove, move[0], move[1])
+
+    return score
+    '''
+    if myTurn:
+      numMove = self.myMoves
+      self.myMoves += 1
+      sampling = self.myMoves
+      player = self.player.playerIdx
+    else:
+      numMove = self.oppMoves
+      self.oppMoves += 1
+      sampling = self.oppMoves
+      player = self.player.oppIdx
+
+    scores = 0
+    for i in xrange(sampling):
+      move = self.player.make_random_move()
+      self.player.updatePoints(player, numMove, move[0], move[1])
+      scores += self.run_simulation(myTurn ^ True)
+      #Undo
+      self.player.undoPoints(player, numMove, move[0], move[1])
+
+    #Undo
+    if myTurn:
+      self.myMoves -= 1
+    else:
+      self.oppMoves -= 1
+
+    return scores / sampling
+    '''
 
 class Player(Client):
   def __init__(self, name, idx, numMoves):
@@ -53,7 +131,13 @@ class Player(Client):
     return self.board[x][y] == -1
 
   def makeMove(self):
+    '''
     move = self.make_random_move()
+    '''
+    simulation = MonteCarlo(self, myMoves = self.myMoves,
+                                  oppMoves = self.oppMoves,
+                                  numMoves = self.numMoves)
+    move = simulation.get_play()
     self.updatePoints(self.playerIdx, self.myMoves, move[0], move[1])
     genVoronoi.generate_voronoi_diagram(2, self.numMoves, self.points, self.colors, None, 0, 0)
     print 'Current score: {0}'.format(self.get_score())
@@ -71,6 +155,13 @@ class Player(Client):
     self.points[player][move][0] = x
     self.points[player][move][1] = y
     self.board[x][y] = player
+    genVoronoi.generate_voronoi_diagram(2, self.numMoves, self.points, self.colors, None, 0, 0)
+
+  def undoPoints(self, player, move, x, y):
+    self.points[player][move][0] = -1
+    self.points[player][move][1] = -1
+    self.board[x][y] = -1
+    genVoronoi.generate_voronoi_diagram(2, self.numMoves, self.points, self.colors, None, 0, 0)
 
   def dataReceived(self, data):
     print 'Player {0} Received: {1}'.format(self.name, data)
