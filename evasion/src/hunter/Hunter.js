@@ -8,9 +8,7 @@ var constants = require('../common/constants');
 var base = require('../common/base');
 
 function Hunter(lenX, lenY) {
-  this.map = base.generateMap(lenX, lenY);
-  this.lenX = lenX;
-  this.lenY = lenY;
+  this.map = base.generateMap();
 }
 
 Hunter.prototype.makeMove = function() {

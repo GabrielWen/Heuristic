@@ -9,15 +9,79 @@ var constants = require('./constants');
 
 var base = module.exports = {};
 
-base.generateMap = function(lenX, lenY) {
+base.Wall = function(pos, length, direction, canBeDestroyed) {
+  this.position = pos;
+  this.length = length;
+  this.direction = direction;
+  this.canBeDestroyed = canBeDestroyed;
+};
+
+base.generateMap = function() {
   var newMap = [];
 
-  for (var i = 0; i < lenY; i++) {
-    newMap.push(_lo.fill(new Array(lenX), 0));
-  }
-
-  newMap[constants.InitPos.Hunter[0]][constants.InitPos.Hunter[1]] = constants.Mark.hunter;
-  newMap[constants.InitPos.Prey[0]][constants.InitPos.Prey[1]] = constants.Mark.prey;
+  newMap.push(new base.Wall([-1, -1], 302, constants.Directions.S, false));
+  newMap.push(new base.Wall([301, -1], 302, constants.Directions.S, false));
+  newMap.push(new base.Wall([0, -1], 300, constants.Directions.E, false));
+  newMap.push(new base.Wall([0, 301], 300, constants.Directions.E, false));
 
   return newMap;
+};
+
+function nextPos(pos, direction) {
+  return [pos[0] + direction[0], pos[1] + direction[1]];
+}
+
+function isPointOnWall(p, w) {
+  switch (w.direction) {
+    case constants.Directions.E:
+      return w.position[1] === p[1] && w.position[0] <= p[0] && w.position[0] + w.length >= p[0];
+    case constants.Directions.W:
+      return w.position[1] === p[1] && w.position[0] >= p[0] && w.position[0] - w.length <= p[0];
+    case constants.Directions.S:
+      return w.position[0] === p[0] && w.position[1] <= p[1] && w.position[1] + w.length >= p[1];
+    case constants.Directions.N:
+      return w.position[0] === p[0] && w.position[1] >= p[1] && w.position[1] - w.length <= p[1];
+    default:
+      return false;
+  }
+}
+
+base.moveHunter = function(pos, direction, walls) {
+  var newPos = nextPos(pos, direction);
+  var newDirection = [direction[0], direction[1]];
+
+  var hitWall = _lo.find(walls, _lo.partial(isPointOnWall, newPos));
+
+  //Implementation of bounce-off algorithm
+  if (!_lo.isEmpty(hitWall)) {
+    if (hitWall.direction == constants.Directions.E || hitWall.direction == constants.Directions.W) {
+      newPos = nextPos(newPos, [0, newDirection[1] * -1]);
+      newDirection[1] *= -1;
+    } else {
+      newPos = nextPos(newPos, [newDirection[0] * -1, 0]);
+      newDirection[0] *= -1;
+    }
+
+    hitWall = _lo.find(walls, _lo.partial(isPointOnWall, newPos));
+    if (!_lo.isEmpty(hitWall)) {
+      if (hitWall.direction == constants.Directions.E || hitWall.direction == constants.Directions.W) {
+        newPos = nextPos(newPos, [newDirection[0] * -1, newDirection[1] * -1]);
+        newDirection = [direction[0] * -1, direction[1]];
+      } else {
+        newPos = nextPos(newPos, [newDirection[0] * -1, newDirection[1] * -1]);
+        newDirection = [direction[0], direction[1] * -1];
+      }
+    }
+  }
+
+  hitWall = _lo.find(walls, _lo.partial(isPointOnWall, newPos));
+  if (!_lo.isEmpty(hitWall)) {
+    newPos = pos;
+    newDirection = [direction[0] * -1, direction[1] * -1];
+  }
+
+  return {
+    position: newPos,
+    direction: newDirection
+  };
 };
