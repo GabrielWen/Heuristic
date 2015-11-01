@@ -55,25 +55,27 @@ base.moveHunter = function(pos, direction, walls) {
   //Implementation of bounce-off algorithm
   if (!_lo.isEmpty(hitWall)) {
     if (hitWall.direction == constants.Directions.E || hitWall.direction == constants.Directions.W) {
-      newPos = nextPos(newPos, [0, newDirection[1] * -1]);
-      newDirection[1] *= -1;
+      newPos = nextPos(pos, [newDirection[0], 0]);
+      newDirection = [direction[0], direction[1] * -1];
     } else {
-      newPos = nextPos(newPos, [newDirection[0] * -1, 0]);
-      newDirection[0] *= -1;
+      newPos = nextPos(pos, [0, newDirection[1]]);
+      newDirection = [direction[0] * -1, direction[1]];
     }
 
-    hitWall = _lo.find(walls, _lo.partial(isPointOnWall, newPos));
-    if (!_lo.isEmpty(hitWall)) {
+    //Second check
+    var secondWall = _lo.find(walls, _lo.partial(isPointOnWall, newPos));
+    if (!_lo.isEmpty(secondWall)) {
       if (hitWall.direction == constants.Directions.E || hitWall.direction == constants.Directions.W) {
-        newPos = nextPos(newPos, [newDirection[0] * -1, newDirection[1] * -1]);
+        newPos = nextPos(pos, [0, direction[1]]);
         newDirection = [direction[0] * -1, direction[1]];
       } else {
-        newPos = nextPos(newPos, [newDirection[0] * -1, newDirection[1] * -1]);
+        newPos = nextPos(pos, [direction[0], 0]);
         newDirection = [direction[0], direction[1] * -1];
       }
     }
   }
 
+  //Check if a corner is hit
   hitWall = _lo.find(walls, _lo.partial(isPointOnWall, newPos));
   if (!_lo.isEmpty(hitWall)) {
     newPos = pos;
