@@ -1,5 +1,8 @@
 'use strict';
 
+var util = require('util');
+var math = require('mathjs');
+
 var Hunter = require('./src/hunter/Hunter');
 var base = require('./src/common/base');
 var constants = require('./src/common/constants');
