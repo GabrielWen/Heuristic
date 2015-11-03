@@ -9,34 +9,55 @@ class Hunter(object):
     self.prey = [230, 200]
     self.hunter = [0, 0]
     self.direction = [1, 1]
-    self.hunter_direction = None
     self.time = 0
-    self.cooldown = 0
+    self.cooldown = 3
     self.lastTimeBuiltWall = -1
-    self.wall_string = ''
-    self.grid = {}
+    self.grid = {
+      'left': {
+        'position': [-1, -1],
+        'length': 301,
+        'direction': 'N'
+      },
+      'right': {
+        'position': [301, -1],
+        'length': 301,
+        'direction': 'N'
+      },
+      'top': {
+        'position': [-1, -1],
+        'length': 301,
+        'direction': 'E'
+      },
+      'down': {
+        'position': [-1, 301],
+        'length': 301,
+        'direction': 'E'
+      }
+    }
     self.walls = []
 
   def long_dist(self):
     return max(abs(self.prey[0] - self.hunter[0]), abs(self.prey[1] - self.hunter[1]))
 
+  def short_dist(self):
+    return min(abs(self.prey[0] - self.hunter[0]), abs(self.prey[1] - self.hunter[1]))
+
   def short_side(self):
     # Return direction of wall that should be built
-    if abs(self.prey[0] - self.hunter[0]) > abs(self.prey[1], self.hunter[1]):
-      return 'V'
-    else:
-      return 'H'
+    ver_area = self.prey_area(self.walls[:] + [self.new_vertical_wall()])
+    hor_area = self.prey_area(self.walls[:] + [self.new_horizontal_wall()])
+    return 'V' if ver_area < hor_area else 'H'
 
   def have_cooldown(self):
-    return self.time - self.lastTimeBultWall < self.cooldown
+    return self.time - self.lastTimeBuiltWall < self.cooldown
 
   def prey_in_front(self):
     vector_h2p = self.prey[0] - self.hunter[0], self.prey[1] - self.hunter[1]
-    return (vector_h2p[0] * self['direction'][0] > 0) and (vector_h2p[1] * self['direction'][1] > 0)
+    return (vector_h2p[0] * self.direction[0] > 0) and (vector_h2p[1] * self.direction[1] > 0)
 
   def prey_area(self, walls):
     left, right, top, down = [], [], [], []
-    def sorting(w):
+    for w in walls:
       if w['direction'] == 'E' or w['direction'] == 'W':
         dist = w['position'][1] - self.prey[1]
         met = False
@@ -47,10 +68,10 @@ class Hunter(object):
 
         if dist > 0:
           if met:
-            top.append((dist, w))
+            down.append((dist, w))
         else:
           if met:
-            down.append((dist, w))
+            top.append((dist, w))
       else:
         dist = w['position'][0] - self.prey[0]
         met = False
@@ -65,7 +86,6 @@ class Hunter(object):
         else:
           if met:
             left.append((dist, w))
-    map(sorting, walls)
 
     if len(left):
       left = sorted(left, key=lambda x: x[0])[-1][1]
@@ -84,24 +104,22 @@ class Hunter(object):
     else:
       down = self.grid['down']
 
-    return (top['position'][1] - down['position'][1]) * (right[0] - left[0])
+    return abs(top['position'][1] - down['position'][1]) * abs(right['position'][0] - left['position'][0])
 
   def wall_between(self):
-    ret = True
-
-    def check_wall(w):
+    ret = False
+    for w in self.walls:
       if w['direction'] == 'E' or w['direction'] == 'W':
-        ret = ret and ((self.prey[1] < w['position'][1] < self.hunter[1]) or (self.hunter[1] < w['position'][1] < self.prey[1]))
+        ret = ret or ((self.prey[1] < w['position'][1] < self.hunter[1]) or (self.hunter[1] < w['position'][1] < self.prey[1]))
       else:
-        ret = ret and ((self.prey[0] < w['position'][0] < self.hunter[0]) or (self.hunter[0] < w['position'][0] < self.prey[0]))
-    map(check_wall, self.walls)
+        ret = ret or ((self.prey[0] < w['position'][0] < self.hunter[0]) or (self.hunter[0] < w['position'][0] < self.prey[0]))
 
     return ret
 
   def new_vertical_wall(self):
     top, down = [], []
 
-    def find_walls(w):
+    for w in self.walls:
       if w['direction'] == 'E' or w['direction'] == 'W':
         dist = w['position'][1] - self.hunter[1]
         met = False
@@ -112,11 +130,10 @@ class Hunter(object):
 
         if dist > 0:
           if met:
-            top.append((dist, w))
+            down.append((dist, w))
         else:
           if met:
-            down.append((dist, w))
-    map(find_walls, self.walls)
+            top.append((dist, w))
 
     if len(top):
       top = sorted(top, key=lambda x: x[0])[0][1]
@@ -128,15 +145,15 @@ class Hunter(object):
       down = self.grid['down']
 
     return {
-      'length': top['position'][1] - down['position'][1],
-      'position': [self.hunter[0], top['position'][1]],
+      'length': abs(top['position'][1] - down['position'][1]),
+      'position': [self.hunter[0], top['position'][1] + 1],
       'direction': 'S'
     }
 
   def new_horizontal_wall(self):
     left, right = [], []
 
-    def find_walls(w):
+    for w in self.walls:
       if w['direction'] == 'N' or w['direction'] == 'S':
         dist = w['position'][0] - self.hunter[0]
         met = False
@@ -151,7 +168,6 @@ class Hunter(object):
         else:
           if met:
             left.append((dist, w))
-    map(find_walls, self.walls)
 
     if len(left):
       left = sorted(left, key=lambda x: x[0])[-1][1]
@@ -163,8 +179,8 @@ class Hunter(object):
       right = self.grid['right']
 
     return {
-      'length': right['position'][0] - left['position'][0],
-      'position': [left['position'][0], self.hunter[1]],
+      'length': abs(right['position'][0] - left['position'][0]),
+      'position': [left['position'][0] + 1, self.hunter[1]],
       'direction': 'E'
     }
       
@@ -175,11 +191,11 @@ class Hunter(object):
       w = self.walls[i]
       if w['direction'] == 'E' or w['direction'] == 'W':
         if self.prey[1] < w['position'][1] < self.hunter[1] or self.hunter[1] < w['position'][1] < self.prey[1]:
-          wall = w
+          wall = i
           break
       else:
         if self.prey[0] < w['position'][0] < self.hunter[0] or self.hunter[0] < w['position'][0] < self.prey[0]:
-          wall = w
+          wall = i
           break
 
     # Check distance
@@ -207,16 +223,14 @@ class Hunter(object):
     if self.have_cooldown():
       return False
 
-    if in_front:
-      bound = (self.cooldown / 2 + 1) + self.cooldown
-      return self.long_dist() <= bound
-    else:
-      # Return a wall if it can corner prey into a smaller area
-      curr_area = self.prey_area(self.walls)
-      ver_area = self.prey_area(self.walls[:] + [self.new_vertical_wall()])
-      hor_area = self.prey_area(self.walls[:] + [self.new_horizontal_wall()])
+    # Return a wall if it can corner prey into a smaller area
+    curr_area = self.prey_area(self.walls)
+    ver_area = self.prey_area(self.walls[:] + [self.new_vertical_wall()])
+    hor_area = self.prey_area(self.walls[:] + [self.new_horizontal_wall()])
 
-      return min(curr_area, ver_area, hor_area) != curr_area
+    print 'curr({0}) ver({1}) hor({2})'.format(curr_area, ver_area, hor_area)
+
+    return min(curr_area, ver_area, hor_area) < curr_area
       
 
   def move_in_front(self):
@@ -241,6 +255,7 @@ class Hunter(object):
 
   def make_move(self, cmd):
     self.walls = cmd['walls']
+    self.direction = [cmd['hunter'][0] - self.hunter[0], cmd['hunter'][1] - self.hunter[1]]
     self.hunter = cmd['hunter']
     self.prey = cmd['prey']
     self.time = cmd['time']
