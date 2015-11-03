@@ -99,6 +99,7 @@ class Hunter(object):
   def __init__(self):
     self.prey = [230, 200]
     self.hunter = [0, 0]
+    self.direction = [1, 1]
     self.hunter_direction = None
     self.cooldown = 0
     self.lastTimeBuiltWall = -1
@@ -127,7 +128,8 @@ class Hunter(object):
       return False
 
   def prey_direction(self):
-    pass
+    vector_h2p = self.prey[0] - self.hunter[0], self.prey[1] - self.hunter[1]
+    return (vector_h2p[0] * vector_h2p[1] > 0) ^ (self.direction[0] * self.direction[1] > 0)
 
   def prey_area(self):
     pass
@@ -176,30 +178,14 @@ class Hunter(object):
 
 
 def main():
-  myPrey = Prey()
+  hunter = Hunter()
+  #TODO: Send first move
 
-  stepCount = 1
-  while(stepCount < 1000):
-    print "------------------", "stepCount", stepCount, "------------------"
-    if stepCount%2 == 1:
-      #in this round, prey do nothing
-      # socketH.send(json.dumps({"command":"M", "direction": "S"}))
-      myPrey.recvPublisher()
-    elif stepCount%2 == 0:
-      # #check states
-      # myPrey.checkPosition()
-      # myPrey.checkWalls()
-
-      #prey decide moves, and make move
-      nextMove = myPrey.decideMove()
-      myPrey.addMove(nextMove)
-
-      #hunter will make move
-      # socketH.send(json.dumps({"command":"M", "direction": "S"}))
-
-      myPrey.recvPublisher()
-
-    stepCount += 1
+  gameover = False
+  while gameover is False:
+    cmd = json.loads(mainSocket.recv())
+    gameover = cmd['gameover']
+    #TODO: Invoke hunter and make new move
 
 
 if __name__ == '__main__':
