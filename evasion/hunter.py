@@ -132,7 +132,7 @@ class Hunter(object):
     return (vector_h2p[0] * self.direction[0] > 0) and (vector_h2p[1] * self.direction[1] > 0)
 
   def prey_area(self, walls):
-    left, right, top, down = [], [], [], [], []
+    left, right, top, down = [], [], [], []
     def sorting(w):
       if w.direction == 'E' or w.direction == 'W':
         dist = w.position[1] - self.prey[1]
