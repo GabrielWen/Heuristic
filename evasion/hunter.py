@@ -108,7 +108,7 @@ class Hunter(object):
     self.walls = []
     self.publisherMsg = False
     self.addDirs = {'0_-1': 'N', '0_1': 'S', '1_0': 'E', '-1_0': 'W', '1_-1': 'NE', '-1_-1': 'NW', '1_1': 'SE', '-1_1': 'SW'}
-    self.Dir2Coord = {'N': (0, -1), 'S': (0, 1), 'E': (1, 0), 'W': (-1, 0), 'NE': (1, -1), 'NW': (-1, -1), 'SE': (1, 1), 'SW': (-1, 1)}
+    self.Dir2Coordinate = {"X":(0,0), "N":(0,-1), "S":(0,1), "E":(1,0), "W":(-1,0), "NE":(1,-1), "NW":(-1,-1), "SE":(1,1), "SW":(-1,1)}
     self.getOppDir = {'S': 'N', 'N': 'S', 'W': 'E', 'E': 'W', 'WS': 'NE', 'SE': 'NW', 'NW': 'SE', 'NE': 'SW'}
 
   def long_dist(self):
@@ -127,7 +127,7 @@ class Hunter(object):
     else:
       return False
 
-  def prey_direction(self):
+  def prey_in_front(self):
     vector_h2p = self.prey[0] - self.hunter[0], self.prey[1] - self.hunter[1]
     return (vector_h2p[0] * vector_h2p[1] > 0) ^ (self.direction[0] * self.direction[1] > 0)
 
@@ -171,7 +171,7 @@ class Hunter(object):
     pass
 
   def make_move(self, now):
-    if self.prey_direction() == 'in_front':
+    if self.prey_in_front():
       return self.move_in_front()
     else:
       return self.move_in_back()
