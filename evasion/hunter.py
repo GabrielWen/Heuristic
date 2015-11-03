@@ -5,12 +5,13 @@ mainSocket = create_connection('ws://localhost:1990');
 socketH = create_connection('ws://localhost:1991');
 
 class Hunter(object):
-  def __init__(self):
+  def __init__(self, cooldown, maxWalls):
     self.prey = [230, 200]
     self.hunter = [0, 0]
     self.direction = [1, 1]
     self.time = 0
-    self.cooldown = 3
+    self.cooldown = cooldown
+    self.maxWalls = maxWalls
     self.lastTimeBuiltWall = -1
     self.grid = {
       'left': {
@@ -147,7 +148,7 @@ class Hunter(object):
     return {
       'length': abs(top['position'][1] - down['position'][1]),
       'position': [self.hunter[0], top['position'][1] + 1],
-      'direction': 'S'
+      'direction': 'N'
     }
 
   def new_horizontal_wall(self):
@@ -209,7 +210,7 @@ class Hunter(object):
 
     cmd = {
       'command': 'BD',
-      'wallIds': [wall]
+      'wallIds': [self.walls[wall]['id']]
     }
     del self.walls[wall]
     
@@ -228,10 +229,20 @@ class Hunter(object):
     ver_area = self.prey_area(self.walls[:] + [self.new_vertical_wall()])
     hor_area = self.prey_area(self.walls[:] + [self.new_horizontal_wall()])
 
-    print 'curr({0}) ver({1}) hor({2})'.format(curr_area, ver_area, hor_area)
-
     return min(curr_area, ver_area, hor_area) < curr_area
       
+
+  def remove_walls(self, cmd):
+    cmd['command'] = 'BD'
+    cmd['wallIds'] = []
+
+    curr_area = self.prey_area(self.walls)
+    for i in xrange(len(self.walls)):
+      area = self.prey_area(self.walls[:i] + self.walls[i+1:])
+      if area == curr_area:
+        cmd['wallIds'].append(self.walls[i]['id'])
+
+    return cmd
 
   def move_in_front(self):
     cmd = {'command': 'M'}
@@ -243,6 +254,9 @@ class Hunter(object):
         cmd['command'] = 'B'
         cmd['wall'] = {'direction': self.short_side()}
 
+    if len(self.walls) >= self.maxWalls:
+      return self.remove_walls(cmd)
+
     return cmd
 
   def move_in_back(self):
@@ -250,6 +264,9 @@ class Hunter(object):
     if self.good_time_for_wall(False):
       cmd['command'] = 'B'
       cmd['wall'] = {'direction': self.short_side()}
+
+    if len(self.walls) >= self.maxWalls:
+      return self.remove_walls(cmd)
 
     return cmd
 
@@ -267,7 +284,7 @@ class Hunter(object):
 
 
 def main():
-  hunter = Hunter()
+  hunter = Hunter(3, 5)
   socketH.send(json.dumps({'command': 'M'}))
 
   gameover = False
@@ -277,6 +294,8 @@ def main():
     if gameover is False:
       newMove = hunter.make_move(cmd)
       socketH.send(json.dumps(newMove))
+    else:
+      print 'DONE: ' + str(cmd['time'])
 
 
 if __name__ == '__main__':
