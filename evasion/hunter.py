@@ -129,7 +129,7 @@ class Hunter(object):
 
   def prey_in_front(self):
     vector_h2p = self.prey[0] - self.hunter[0], self.prey[1] - self.hunter[1]
-    return (vector_h2p[0] * vector_h2p[1] > 0) ^ (self.direction[0] * self.direction[1] > 0)
+    return (vector_h2p[0] * self.direction[0] > 0) and (vector_h2p[1] * self.direction[1] > 0)
 
   def prey_area(self):
     pass
