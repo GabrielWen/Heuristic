@@ -126,19 +126,19 @@ class Hunter(object):
 
   def prey_in_front(self):
     vector_h2p = self.prey[0] - self.hunter[0], self.prey[1] - self.hunter[1]
-    return (vector_h2p[0] * self.direction[0] > 0) and (vector_h2p[1] * self.direction[1] > 0)
+    return (vector_h2p[0] * self['direction'][0] > 0) and (vector_h2p[1] * self['direction'][1] > 0)
 
   def prey_area(self, walls):
     left, right, top, down = [], [], [], []
     def sorting(w):
-      if w.direction == 'E' or w.direction == 'W':
-        dist = w.position[1] - self.prey[1]
+      if w['direction'] == 'E' or w['direction'] == 'W':
+        dist = w['position'][1] - self.prey[1]
         if dist > 0:
           top.append((dist, w))
         else:
           down.append((dist, w))
       else:
-        dist = w.position[0] - self.prey[0]
+        dist = w['position'][0] - self.prey[0]
         if dist:
           right.append((dist, w))
         else:
@@ -163,16 +163,16 @@ class Hunter(object):
       down = self.grid['down']
 
     #TODO: Do we need to consider about connectness?
-    return (top.position[1] - down.position[1]) * (right[0] - left[0])
+    return (top['position'][1] - down['position'][1]) * (right[0] - left[0])
 
   def wall_between(self):
     ret = True
 
     def check_wall(w):
-      if w.position == 'E' or w.position == 'W':
-        ret = ret and ((self.prey[1] < w.position[1] < self.hunter[1]) or (self.hunter[1] < w.position[1] < self.prey[1]))
+      if w['direction'] == 'E' or w['direction'] == 'W':
+        ret = ret and ((self.prey[1] < w['position'][1] < self.hunter[1]) or (self.hunter[1] < w['position'][1] < self.prey[1]))
       else:
-        ret = ret and ((self.prey[0] < w.position[0] < self.hunter[0]) or (self.hunter[0] < w.position[0] < self.prey[0]))
+        ret = ret and ((self.prey[0] < w['position'][0] < self.hunter[0]) or (self.hunter[0] < w['position'][0] < self.prey[0]))
     map(check_wall, self.walls)
 
     return ret
@@ -184,10 +184,33 @@ class Hunter(object):
     pass
 
   def remove_and_build_wall(self):
-    pass
+    # TODO: Do this when it's close enough
+    wall = None
+    for i in xrange(len(self.walls)):
+      w = self.walls[i]
+      if w['direction'] == 'E' or w['direction'] == 'W':
+        if self.prey[1] < w['position'][1] < self.hunter[1] or self.hunter[1] < w['position'][1] < self.prey[1]:
+          wall = w
+          break
+      else:
+        if self.prey[0] < w['position'][0] < self.hunter[0] or self.hunter[0] < w['position'][0] < self.prey[0]:
+          wall = w
+          break
+    cmd = {
+      'command': 'BD',
+      'wallIds': [wall]
+    }
+    del self.walls[wall]
+    
+    ver_area = self.prey_area(self.walls[:] + [self.new_vertical_wall()])
+    hor_area = self.prey_area(self.walls[:] + [self.new_horizontal_wall()])
+    cmd['wall'] = {'direction': ('V' if ver_area < hor_area or 'H')}
+
+    return cmd
 
   def new_vertical_wall(self):
     pass
+
   def new_horizontal_wall(self):
     pass
 
@@ -208,19 +231,10 @@ class Hunter(object):
       
 
   def move_in_front(self, time):
-    '''
-    1. If a wall can be built:
-      (1). if long_dist approachs self.cooldown, build on short side
-      (2). build a wall that can minimize area for prey to move
-    2. Else:
-      Nothing
-    3. If a wall between hunter and prey:
-      remove it and build new wall that minimize the area for prey to move
-    '''
     cmd = {'command': 'M'}
 
     if self.wall_between():
-      pass
+      cmd = self.remove_and_build_wall()
     else:
       if self.good_time_for_wall(time):
         cmd['command'] = 'B'
