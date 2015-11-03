@@ -207,7 +207,7 @@ class Hunter(object):
       return min(curr_area, ver_area, hor_area) != curr_area
       
 
-  def move_in_front(self):
+  def move_in_front(self, time):
     '''
     1. If a wall can be built:
       (1). if long_dist approachs self.cooldown, build on short side
@@ -217,7 +217,16 @@ class Hunter(object):
     3. If a wall between hunter and prey:
       remove it and build new wall that minimize the area for prey to move
     '''
-    pass
+    cmd = {'command': 'M'}
+
+    if self.wall_between():
+      pass
+    else:
+      if self.good_time_for_wall(time):
+        cmd['command'] = 'B'
+        cmd['wall'] = {'direction': self.short_side()}
+
+    return cmd
 
   def move_in_back(self):
     '''
