@@ -104,7 +104,7 @@ class Hunter(object):
     self.cooldown = 0
     self.lastTimeBuiltWall = -1
     self.wall_string = ''
-    self.grid = []
+    self.grid = {}
     self.walls = []
     self.publisherMsg = False
     self.addDirs = {'0_-1': 'N', '0_1': 'S', '1_0': 'E', '-1_0': 'W', '1_-1': 'NE', '-1_-1': 'NW', '1_1': 'SE', '-1_1': 'SW'}
@@ -131,8 +131,42 @@ class Hunter(object):
     vector_h2p = self.prey[0] - self.hunter[0], self.prey[1] - self.hunter[1]
     return (vector_h2p[0] * self.direction[0] > 0) and (vector_h2p[1] * self.direction[1] > 0)
 
-  def prey_area(self):
-    pass
+  def prey_area(self, walls):
+    left, right, top, down = [], [], [], [], []
+    def sorting(w):
+      if w.direction == 'E' or w.direction == 'W':
+        dist = w.position[1] - self.prey[1]
+        if dist > 0:
+          top.append((dist, w))
+        else:
+          down.append((dist, w))
+      else:
+        dist = w.position[0] - self.prey[0]
+        if dist:
+          right.append((dist, w))
+        else:
+          left.append((dist, w))
+    map(sorting, walls)
+
+    if len(left):
+      left = sorted(left, key=lambda x: x[0])[-1]
+    else:
+      left = self.grid['left']
+    if len(right):
+      right = sorted(right, key=lambda x: x[0])[0]
+    else:
+      right = self.grid['right']
+    if len(top):
+      top = sorted(top, key=lambda x: x[0])[0]
+    else:
+      top = self.grid['top']
+    if len(down):
+      down = sorted(down, key=lambda x: x[0])[-1]
+    else:
+      down = self.grid['down']
+
+    #TODO: Do we need to consider about connectness?
+    return (top.position[1] - down.position[1]) * (right[0] - left[0])
 
   def wall_between(self):
     pass
