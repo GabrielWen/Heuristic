@@ -83,10 +83,10 @@ class Hunter(object):
 
         if dist:
           if met:
-            right.append((dist, w))
+            left.append((dist, w))
         else:
           if met:
-            left.append((dist, w))
+            right.append((dist, w))
 
     if len(left):
       left = sorted(left, key=lambda x: x[0])[-1][1]
