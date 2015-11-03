@@ -177,9 +177,6 @@ class Hunter(object):
 
     return ret
 
-  def remove_wall(self):
-    pass
-
   def make_wall_in_front(self):
     pass
 
@@ -188,6 +185,27 @@ class Hunter(object):
 
   def remove_and_build_wall(self):
     pass
+
+  def new_vertical_wall(self):
+    pass
+  def new_horizontal_wall(self):
+    pass
+
+  def good_time_for_wall(self, now, in_front):
+    if self.have_cooldown(now):
+      return False
+
+    if in_front:
+      bound = (self.cooldown / 2 + 1) + self.cooldown
+      return self.long_dist() <= bound
+    else:
+      # Return a wall if it can corner prey into a smaller area
+      curr_area = self.prey_area(self.walls)
+      ver_area = self.prey_area(self.walls[:] + [self.new_vertical_wall()])
+      hor_area = self.prey_area(self.walls[:] + [self.new_horizontal_wall()])
+
+      return min(curr_area, ver_area, hor_area) != curr_area
+      
 
   def move_in_front(self):
     '''
