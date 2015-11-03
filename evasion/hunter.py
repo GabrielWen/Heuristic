@@ -39,36 +39,51 @@ class Hunter(object):
     def sorting(w):
       if w['direction'] == 'E' or w['direction'] == 'W':
         dist = w['position'][1] - self.prey[1]
-        if dist > 0:
-          top.append((dist, w))
+        met = False
+        if w['direction'] == 'E':
+          met = w['position'][0] <= self.prey[0] <= w['position'][0] + w['length']
         else:
-          down.append((dist, w))
+          met = w['position'][0] - w['length'] <= self.prey[0] <= w['position'][0]
+
+        if dist > 0:
+          if met:
+            top.append((dist, w))
+        else:
+          if met:
+            down.append((dist, w))
       else:
         dist = w['position'][0] - self.prey[0]
-        if dist:
-          right.append((dist, w))
+        met = False
+        if w['direction'] == 'S':
+          met = w['position'][1] - w['length'] <= self.prey[1] <= w['position'][1]
         else:
-          left.append((dist, w))
+          met = w['position'][1] <= self.prey[1] <= w['position'][1] + w['length']
+
+        if dist:
+          if met:
+            right.append((dist, w))
+        else:
+          if met:
+            left.append((dist, w))
     map(sorting, walls)
 
     if len(left):
-      left = sorted(left, key=lambda x: x[0])[-1]
+      left = sorted(left, key=lambda x: x[0])[-1][1]
     else:
       left = self.grid['left']
     if len(right):
-      right = sorted(right, key=lambda x: x[0])[0]
+      right = sorted(right, key=lambda x: x[0])[0][1]
     else:
       right = self.grid['right']
     if len(top):
-      top = sorted(top, key=lambda x: x[0])[0]
+      top = sorted(top, key=lambda x: x[0])[0][1]
     else:
       top = self.grid['top']
     if len(down):
-      down = sorted(down, key=lambda x: x[0])[-1]
+      down = sorted(down, key=lambda x: x[0])[-1][1]
     else:
       down = self.grid['down']
 
-    #TODO: Do we need to consider about connectness?
     return (top['position'][1] - down['position'][1]) * (right[0] - left[0])
 
   def wall_between(self):
@@ -84,10 +99,75 @@ class Hunter(object):
     return ret
 
   def new_vertical_wall(self):
-    pass
+    top, down = [], []
+
+    def find_walls(w):
+      if w['direction'] == 'E' or w['direction'] == 'W':
+        dist = w['position'][1] - self.hunter[1]
+        met = False
+        if w['direction'] == 'E':
+          met = w['position'][0] <= self.hunter[0] <= w['position'][0] + w['length']
+        else:
+          met = w['position'][0] - w['length'] <= self.hunter[0] <= w['position'][0]
+
+        if dist > 0:
+          if met:
+            top.append((dist, w))
+        else:
+          if met:
+            down.append((dist, w))
+    map(find_walls, self.walls)
+
+    if len(top):
+      top = sorted(top, key=lambda x: x[0])[0][1]
+    else:
+      top = self.grid['top']
+    if len(down):
+      down = sorted(down, key=lambda x: x[0])[-1][1]
+    else:
+      down = self.grid['down']
+
+    return {
+      'length': top['position'][1] - down['position'][1],
+      'position': [self.hunter[0], top['position'][1]],
+      'direction': 'S'
+    }
 
   def new_horizontal_wall(self):
-    pass
+    left, right = [], []
+
+    def find_walls(w):
+      if w['direction'] == 'N' or w['direction'] == 'S':
+        dist = w['position'][0] - self.hunter[0]
+        met = False
+        if w['direction'] == 'S':
+          met = w['position'][1] - w['length'] <= self.hunter[1] <= w['position'][1]
+        else:
+          met = w['position'][1] <= self.hunter[1] <= w['position'][1] + w['length']
+
+        if dist > 0:
+          if met:
+            right.append((dist, w))
+        else:
+          if met:
+            left.append((dist, w))
+    map(find_walls, self.walls)
+
+    if len(left):
+      left = sorted(left, key=lambda x: x[0])[-1][1]
+    else:
+      left = self.grid['left']
+    if len(right):
+      right = sorted(right, key=lambda x: x[0])[0][1]
+    else:
+      right = self.grid['right']
+
+    return {
+      'length': right['position'][0] - left['position'][0],
+      'position': [left['position'][0], self.hunter[1]],
+      'direction': 'E'
+    }
+      
 
   def remove_and_build_wall(self):
     # TODO: Do this when it's close enough
@@ -110,7 +190,7 @@ class Hunter(object):
     
     ver_area = self.prey_area(self.walls[:] + [self.new_vertical_wall()])
     hor_area = self.prey_area(self.walls[:] + [self.new_horizontal_wall()])
-    cmd['wall'] = {'direction': ('V' if ver_area < hor_area or 'H')}
+    cmd['wall'] = {'direction': ('V' if ver_area < hor_area else 'H')}
 
     return cmd
 
