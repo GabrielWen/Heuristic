@@ -170,7 +170,6 @@ class Hunter(object):
       
 
   def remove_and_build_wall(self):
-    # TODO: Do this when it's close enough
     wall = None
     for i in xrange(len(self.walls)):
       w = self.walls[i]
@@ -182,6 +181,16 @@ class Hunter(object):
         if self.prey[0] < w['position'][0] < self.hunter[0] or self.hunter[0] < w['position'][0] < self.prey[0]:
           wall = w
           break
+
+    # Check distance
+    none = {'command': 'M'}
+    if self.walls[wall]['direction'] == 'E' or self.walls[wall]['direction'] == 'W':
+      if abs(self.walls[wall]['position'][1] - self.hunter[1]) > 2:
+        return none
+    else:
+      if abs(self.walls[wall]['position'][0] - self.hunter[0]) > 2:
+        return none
+
     cmd = {
       'command': 'BD',
       'wallIds': [wall]
@@ -223,13 +232,12 @@ class Hunter(object):
     return cmd
 
   def move_in_back(self):
-    '''
-    1. If a wall can be built:
-      Built a wall that minimize the area for prey to move
-    2. Else:
-      Nothing
-    '''
-    pass
+    cmd = {'command': 'M'}
+    if self.good_time_for_wall(False):
+      cmd['command'] = 'B'
+      cmd['wall'] = {'direction': self.short_side()}
+
+    return cmd
 
   def make_move(self, cmd):
     self.walls = cmd['walls']
