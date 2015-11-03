@@ -122,10 +122,7 @@ class Hunter(object):
       return 'H'
 
   def have_cooldown(self, time):
-    if time - self.lastTimeBuiltWall < self.cooldown:
-      return True
-    else:
-      return False
+    return time - self.lastTimeBultWall < self.cooldown
 
   def prey_in_front(self):
     vector_h2p = self.prey[0] - self.hunter[0], self.prey[1] - self.hunter[1]
@@ -169,7 +166,16 @@ class Hunter(object):
     return (top.position[1] - down.position[1]) * (right[0] - left[0])
 
   def wall_between(self):
-    pass
+    ret = True
+
+    def check_wall(w):
+      if w.position == 'E' or w.position == 'W':
+        ret = ret and ((self.prey[1] < w.position[1] < self.hunter[1]) or (self.hunter[1] < w.position[1] < self.prey[1]))
+      else:
+        ret = ret and ((self.prey[0] < w.position[0] < self.hunter[0]) or (self.hunter[0] < w.position[0] < self.prey[0]))
+    map(check_wall, self.walls)
+
+    return ret
 
   def remove_wall(self):
     pass
