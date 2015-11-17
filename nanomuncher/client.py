@@ -166,14 +166,31 @@ class Client(protocol.Protocol):
 
     return maxCount, node.label, maxDir
 
+  def nodesWillVisit(self, muncher, start):
+    visited = set([start])
+    nextNode = muncher.nextMove(self.grid.getNode(start), visited)
+    while nextNode is not None:
+      visited.add(nextNode)
+      nextNode = muncher.nextMove(self.grid.getNode(nextNode), visited)
+
+    return visited
+
   def makeMove(self):
-    scores = sorted(map(self.countScore, self.grid.candidates), key=lambda x: x[0], reverse=True)
-    #tarNum = 3 if self.myMunchers['UNUSED'] > 3 else 1
-    tarNum = 1
-    if tarNum == 1 and len(scores) > 1:
-      return ','.join([str(scores[0][1])] + list(scores[0][2])) + '\n'
-    else:
+    if self.myMunchers['UNUSED'] == 0:
       return 'PASS\n'
+
+    scores = sorted(map(self.countScore, self.grid.candidates), key=lambda x: x[0], reverse=True)
+    moves = []
+    nodes = set([])
+    for i in xrange(self.myMunchers['UNUSED']):
+      visits = self.nodesWillVisit(Muncher(scores[i][1], scores[i][2]), scores[i][1])
+      if len(nodes | visits) > (1.1 * len(nodes)):
+        nodes = nodes | visits
+        moves.append(','.join([str(scores[i][1])] + list(scores[i][2])))
+      else:
+        break
+
+    return '|'.join(moves) + '\n'
 
   def dataReceived(self, data):
     lines = data.strip().split('\n')
@@ -192,10 +209,9 @@ class Client(protocol.Protocol):
         self.updatePlayerState(state)
     self.grid.updateCandidates()
 
-    if self.random:
-      self.transport.write(self.randomMove())
-    else:
-      self.transport.write(self.makeMove())
+    next = self.makeMove()
+    print 'next: ' + next
+    self.transport.write(next)
 
   def connectionMade(self):
     self.grid.fetchCandidates()
