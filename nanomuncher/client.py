@@ -122,10 +122,19 @@ class Client(protocol.Protocol):
       self.oppMunchers['DEAD'] = dead
       self.oppScore = score
 
+  def randomMove(self):
+    if random.randint(1, 10) < 3 and self.myMunchers['UNUSED'] > 0:
+      seq = ['UP', 'DOWN', 'LEFT', 'RIGHT']
+      random.shuffle(seq)
+      return ','.join([str(random.choice(self.grid.candidates))] + seq) + '\n'
+    else:
+      return 'PASS\n'
+
   def makeMove(self):
-    return random.choice(self.grid.candidates)
+    pass
 
   def dataReceived(self, data):
+    print 'Received: ' + data
     lines = data.strip().split('\n')
     currScore = self.myScore
     for l in lines:
@@ -142,13 +151,7 @@ class Client(protocol.Protocol):
         self.updatePlayerState(state)
     self.grid.updateCandidates()
 
-    if self.myMunchers['UNUSED'] > 0:
-      move = '{0},LEFT,RIGHT,TOP,DOWN\n'.format(self.makeMove())
-      print 'Move: ' + move
-      self.transport.write(move)
-    else:
-      print 'PASS'
-      self.transport.write('PASS')
+    self.transport.write(self.randomMove())
 
   def connectionMade(self):
     self.grid.fetchCandidates()
