@@ -3,6 +3,7 @@ import random
 import time
 import argparse
 import itertools
+import math
 
 from twisted.internet import reactor, protocol
 
@@ -36,6 +37,7 @@ class Grid(object):
     self.grid = {}
     self.candidates = []
     self.alone = []
+    self.others = []
 
   def addNode(self, pos, node):
     self.nodes[node.label] = node
@@ -47,10 +49,13 @@ class Grid(object):
         self.alone.append(n)
       elif len(self.nodes[n].neighbors) == 1:
         self.candidates.append(n)
+      else:
+        self.others.append(n)
   
   def updateCandidates(self):
     newCandidates = []
     newAlone = []
+    newOthers = []
     for n in self.nodes:
       if self.nodes[n].getStatus() != 'FREE':
         continue
@@ -63,8 +68,12 @@ class Grid(object):
         newCandidates.append(n)
       if count == 0:
         newAlone.append(n)
+      else:
+        newOthers.append(n)
+
     self.candidates[:] = newCandidates
     self.alone[:] = newAlone
+    self.others[:] = newOthers
 
   def getNode(self, id):
     return self.nodes.get(id)
@@ -105,7 +114,8 @@ class Client(protocol.Protocol):
     }
     self.myScore = 0
     self.oppScore = 0
-    self.random = name == 'test'
+    self.lastTimeMove = 0
+    self.currTime = 0
 
   def updateNode(self, data):
     id = int(data[0])
@@ -176,15 +186,22 @@ class Client(protocol.Protocol):
     return visited
 
   def makeMove(self):
-    if self.myMunchers['UNUSED'] == 0 or self.myMunchers['ALIVE'] > 0:
+    if self.myMunchers['UNUSED'] == 0 or (self.currTime > 0 and self.currTime < self.lastTimeMove + 2):
       print self.myMunchers
       return 'PASS\n'
 
-    # TODO:
-    # 1. Maybe record my own munchers
-    # 2. count efficiency more elegantly
-    # 3. Might need to catch some exceptions
-    scores = sorted(map(self.countScore, self.grid.candidates), key=lambda x: x[0], reverse=True)
+    tar = []
+    if len(self.grid.candidates) > 0:
+      tar[:] = self.grid.candidates
+    elif len(self.grid.others) > 0:
+      tar[:] = self.grid.others
+    elif len(self.grid.alone) > 0:
+      tar[:] = self.grid.alone
+    else:
+      print 'No available moves...'
+      return 'PASS\n'
+
+    scores = sorted(map(self.countScore, tar), key=lambda x: x[0], reverse=True)
     moves = []
     nodes = set([])
     for i in xrange(self.myMunchers['UNUSED']):
@@ -196,9 +213,10 @@ class Client(protocol.Protocol):
         break
 
     if len(moves) > 1 and len(moves) > self.myMunchers['UNUSED'] / 3:
-      m = self.myMunchers['UNUSED'] / 3 + 1
+      m = int(math.ceil(self.myMunchers['UNUSED'] / 3.0))
       moves = moves[:m]
 
+    self.lastTimeMove = self.currTime
     return '|'.join(moves) + '\n'
 
   def dataReceived(self, data):
@@ -218,12 +236,10 @@ class Client(protocol.Protocol):
         self.updatePlayerState(state)
     self.grid.updateCandidates()
 
-    if self.name == 'test':
-      next = self.makeMove()
-      print 'next: ' + next
-      self.transport.write(next)
-    else:
-      self.transport.write(self.randomMove())
+    next = self.makeMove()
+    self.currTime += 1
+    print 'next: ' + next
+    self.transport.write(next)
 
   def connectionMade(self):
     self.grid.fetchCandidates()
