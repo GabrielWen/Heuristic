@@ -40,6 +40,8 @@ class Grid(object):
   def __init__(self):
     self.nodes = {}
     self.grid = {}
+    self.candidates = []
+    self.alone = []
 
   def addNode(self, pos, node):
     self.nodes[node.label] = node
@@ -51,11 +53,38 @@ class Grid(object):
     node1.addNeighbor((pos2[0] - pos1[0], pos2[1] - pos1[1]), node2)
     node2.addNeighbor((pos1[0] - pos2[0], pos1[1] - pos2[1]), node1)
 
+  def fetchCandidates(self):
+    for n in self.nodes:
+      if len(self.nodes[n].neighbors) == 0:
+        self.alone.append(n)
+      elif len(self.nodes[n].neighbors) == 1:
+        self.candidates.append(n)
+  
+  def updateCandidates(self):
+    newCandidates = []
+    for n in self.nodes:
+      if self.nodes[n].getStatus() != 'FREE':
+        continue
+      count = 0
+      for x in (-1, 0, 1):
+        for y in (-1, 0, 1):
+          if x == y == 0:
+            continue
+          if not 0 in (x, y):
+            continue
+          pos = (self.nodes[n].pos[0] + x, self.nodes[n].pos[1] + y)
+          try:
+            neigh = self.nodes[n].getNeighbor(pos)
+            if neigh is not None and neigh.getStatus() == 'FREE':
+              count += 1
+          except IndexError:
+            pass
+      if count == 1:
+        newCandidates.append(n)
+    self.candidates[:] = newCandidates
+
   def getNode(self, id):
     return self.nodes[id]
-
-class Muncher(object):
-  pass
 
 class Client(protocol.Protocol):
   """Random Client"""
@@ -74,22 +103,13 @@ class Client(protocol.Protocol):
       'DEAD': 0
     }
 
-  def reset(self):
-    print "Reset called"
-    self.prev_moves = []
-
-  def make_random_move(self):
-    move = None
-    while not move:
-        x = random.randint(0, board_size-1)
-        y = random.randint(0, board_size-1)
-        if (x, y) not in self.prev_moves:
-            move = (x, y)
-    return move
-
   def updateNode(self, data):
     id = int(data[0])
     status = data[3]
+    if status.find('EATEN') != -1:
+      status = 'EATEN'
+    elif status.find('OCCUPIED') != -1:
+      status = 'OCCUPIED'
     self.grid.getNode(id).setStatus(status)
 
   def updatePlayerState(self, data):
@@ -121,8 +141,10 @@ class Client(protocol.Protocol):
         self.updateNode(state)
       elif len(state) == 6:
         self.updatePlayerState(state)
+    self.grid.updateCandidates()
 
   def connectionMade(self):
+    self.grid.fetchCandidates()
     self.transport.write('REGISTER: {0}\n'.format(self.name))
 
   def connectionLost(self, reason):
