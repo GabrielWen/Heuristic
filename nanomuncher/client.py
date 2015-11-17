@@ -2,17 +2,9 @@ import sys
 import random
 import time
 import argparse
+import itertools
 
 from twisted.internet import reactor, protocol
-
-board_size = 1000
-
-direction = {
-  'LEFT': (-1, 0),
-  'RIGHT': (1, 0),
-  'TOP': (0, 1),
-  'DOWN': (0, -1)
-}
 
 class Node(object):
   def __init__(self, id, x, y):
@@ -22,7 +14,9 @@ class Node(object):
     self.status = 'FREE'
 
   def addNeighbor(self, direction, neigh):
-    self.neighbors[direction] = neigh
+    if neigh == 'null':
+      return
+    self.neighbors[direction] = int(neigh)
 
   def hasNeighbor(self, direction):
     return self.neighbors.get(direction) is not None
@@ -47,12 +41,6 @@ class Grid(object):
     self.nodes[node.label] = node
     self.grid[pos] = node
 
-  def addEdge(self, nodeId1, nodeId2):
-    node1, node2 = self.nodes[nodeId1], self.nodes[nodeId2]
-    pos1, pos2 = node1.pos, node2.pos
-    node1.addNeighbor((pos2[0] - pos1[0], pos2[1] - pos1[1]), node2)
-    node2.addNeighbor((pos1[0] - pos2[0], pos1[1] - pos2[1]), node1)
-
   def fetchCandidates(self):
     for n in self.nodes:
       if len(self.nodes[n].neighbors) == 0:
@@ -67,8 +55,8 @@ class Grid(object):
       if self.nodes[n].getStatus() != 'FREE':
         continue
       count = 0
-      for neigh in self.nodes[n].neighbors:
-        if self.nodes[n].neighbors[neigh].status == 'FREE':
+      for neigh in self.nodes[n].neighbors.values():
+        if self.nodes[neigh].status == 'FREE':
           count += 1
 
       if count == 1:
@@ -79,13 +67,32 @@ class Grid(object):
     self.alone[:] = newAlone
 
   def getNode(self, id):
-    return self.nodes[id]
+    return self.nodes.get(id)
+
+class Muncher(object):
+  def __init__(self, pos, loop):
+    self.pos = pos
+    self.loop = loop
+    self.counter = 0
+
+  def nextMove(self, node, visited):
+    for i in xrange(4):
+      ptr = (self.counter + i) % 4
+      direction = self.loop[ptr]
+      neigh = node.getNeighbor(direction)
+      if neigh is not None and not neigh in visited:
+        self.counter = (ptr + 1) % 4
+        self.pos = neigh
+        return neigh
+
+    return None
+
 
 class Client(protocol.Protocol):
-  def __init__(self, name, grid):
+  def __init__(self, name):
     self.name = name
     self.prev_moves = []
-    self.grid = grid
+    self.grid = Grid()
     self.myMunchers = {
       'UNUSED': 10,
       'ALIVE': 0,
@@ -98,10 +105,19 @@ class Client(protocol.Protocol):
     }
     self.myScore = 0
     self.oppScore = 0
+    self.random = name == 'test'
 
   def updateNode(self, data):
     id = int(data[0])
+    x, y = int(data[1]), int(data[2])
     status = data[3]
+    node = self.grid.getNode(id) or Node(id, x, y)
+    node.addNeighbor('UP', data[4])
+    node.addNeighbor('DOWN', data[5])
+    node.addNeighbor('LEFT', data[6])
+    node.addNeighbor('RIGHT', data[7])
+    self.grid.addNode((x, y), node)
+
     if status.find('EATEN') != -1:
       status = 'EATEN'
     elif status.find('OCCUPIED') != -1:
@@ -130,11 +146,36 @@ class Client(protocol.Protocol):
     else:
       return 'PASS\n'
 
+  def countScore(self, node):
+    maxCount = 0
+    maxDir = None
+    node = self.grid.getNode(node)
+    for directions in itertools.permutations(['UP', 'DOWN', 'LEFT', 'RIGHT']):
+      muncher = Muncher(node.label, directions)
+      count = 0
+      visited = set([])
+      nextNode = muncher.nextMove(node, visited)
+      while nextNode is not None:
+        count += 1
+        visited.add(nextNode)
+        nextNode = self.grid.getNode(nextNode)
+        nextNode = muncher.nextMove(nextNode, visited)
+      if count > maxCount:
+        maxCount = count
+        maxDir = directions
+
+    return maxCount, node.label, maxDir
+
   def makeMove(self):
-    pass
+    scores = sorted(map(self.countScore, self.grid.candidates), key=lambda x: x[0], reverse=True)
+    #tarNum = 3 if self.myMunchers['UNUSED'] > 3 else 1
+    tarNum = 1
+    if tarNum == 1 and len(scores) > 1:
+      return ','.join([str(scores[0][1])] + list(scores[0][2])) + '\n'
+    else:
+      return 'PASS\n'
 
   def dataReceived(self, data):
-    print 'Received: ' + data
     lines = data.strip().split('\n')
     currScore = self.myScore
     for l in lines:
@@ -151,7 +192,10 @@ class Client(protocol.Protocol):
         self.updatePlayerState(state)
     self.grid.updateCandidates()
 
-    self.transport.write(self.randomMove())
+    if self.random:
+      self.transport.write(self.randomMove())
+    else:
+      self.transport.write(self.makeMove())
 
   def connectionMade(self):
     self.grid.fetchCandidates()
@@ -160,38 +204,13 @@ class Client(protocol.Protocol):
   def connectionLost(self, reason):
       reactor.stop()
 
-def readGrid(grid):
-  f = open('./data.in', 'r')
-  while True:
-    line = f.readline()
-    if not line:
-      break
-
-    data = line.split(',')
-    if len(data) == 2:
-      # Add Edge
-      try:
-        grid.addEdge(int(data[0]), int(data[1]))
-      except:
-        pass
-    elif len(data) == 3:
-      # Add Node
-      try:
-        newNode = Node(int(data[0]), int(data[1]), int(data[2]))
-        grid.addNode((int(data[1]), int(data[2])), newNode)
-      except:
-        pass
-  f.close()
-
 class ClientFactory(protocol.ClientFactory):
   """ClientFactory"""
   def __init__(self, name):
     self.name = name
 
   def buildProtocol(self, addr):
-    grid = Grid()
-    readGrid(grid)
-    c = Client(self.name, grid)
+    c = Client(self.name)
     c.addr = addr
     return c
 
