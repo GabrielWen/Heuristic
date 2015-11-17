@@ -75,12 +75,12 @@ class Muncher(object):
     self.loop = loop
     self.counter = 0
 
-  def nextMove(self, node, visited):
+  def nextMove(self, node, visited, grid):
     for i in xrange(4):
       ptr = (self.counter + i) % 4
       direction = self.loop[ptr]
       neigh = node.getNeighbor(direction)
-      if neigh is not None and not neigh in visited:
+      if neigh is not None and not neigh in visited and grid.getNode(neigh).status == 'FREE':
         self.counter = (ptr + 1) % 4
         self.pos = neigh
         return neigh
@@ -154,12 +154,12 @@ class Client(protocol.Protocol):
       muncher = Muncher(node.label, directions)
       count = 0
       visited = set([])
-      nextNode = muncher.nextMove(node, visited)
+      nextNode = muncher.nextMove(node, visited, self.grid)
       while nextNode is not None:
         count += 1
         visited.add(nextNode)
         nextNode = self.grid.getNode(nextNode)
-        nextNode = muncher.nextMove(nextNode, visited)
+        nextNode = muncher.nextMove(nextNode, visited, self.grid)
       if count > maxCount:
         maxCount = count
         maxDir = directions
@@ -168,17 +168,22 @@ class Client(protocol.Protocol):
 
   def nodesWillVisit(self, muncher, start):
     visited = set([start])
-    nextNode = muncher.nextMove(self.grid.getNode(start), visited)
+    nextNode = muncher.nextMove(self.grid.getNode(start), visited, self.grid)
     while nextNode is not None:
       visited.add(nextNode)
-      nextNode = muncher.nextMove(self.grid.getNode(nextNode), visited)
+      nextNode = muncher.nextMove(self.grid.getNode(nextNode), visited, self.grid)
 
     return visited
 
   def makeMove(self):
-    if self.myMunchers['UNUSED'] == 0:
+    if self.myMunchers['UNUSED'] == 0 or self.myMunchers['ALIVE'] > 0:
+      print self.myMunchers
       return 'PASS\n'
 
+    # TODO:
+    # 1. Maybe record my own munchers
+    # 2. count efficiency more elegantly
+    # 3. Might need to catch some exceptions
     scores = sorted(map(self.countScore, self.grid.candidates), key=lambda x: x[0], reverse=True)
     moves = []
     nodes = set([])
@@ -189,6 +194,10 @@ class Client(protocol.Protocol):
         moves.append(','.join([str(scores[i][1])] + list(scores[i][2])))
       else:
         break
+
+    if len(moves) > 1 and len(moves) > self.myMunchers['UNUSED'] / 3:
+      m = self.myMunchers['UNUSED'] / 3 + 1
+      moves = moves[:m]
 
     return '|'.join(moves) + '\n'
 
@@ -209,9 +218,12 @@ class Client(protocol.Protocol):
         self.updatePlayerState(state)
     self.grid.updateCandidates()
 
-    next = self.makeMove()
-    print 'next: ' + next
-    self.transport.write(next)
+    if self.name == 'test':
+      next = self.makeMove()
+      print 'next: ' + next
+      self.transport.write(next)
+    else:
+      self.transport.write(self.randomMove())
 
   def connectionMade(self):
     self.grid.fetchCandidates()
