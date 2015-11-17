@@ -19,7 +19,7 @@ class Node(object):
     self.label = id
     self.pos = (x, y)
     self.neighbors = {}
-    self.status = True
+    self.status = 'FREE'
 
   def addNeighbor(self, direction, neigh):
     self.neighbors[direction] = neigh
@@ -63,6 +63,16 @@ class Client(protocol.Protocol):
     self.name = name
     self.prev_moves = []
     self.grid = grid
+    self.myMunchers = {
+      'UNUSED': 10,
+      'ALIVE': 0,
+      'DEAD': 0
+    },
+    self.oppMunchers = {
+      'UNUSED': 10,
+      'ALIVE': 0,
+      'DEAD': 0
+    }
 
   def reset(self):
     print "Reset called"
@@ -78,10 +88,21 @@ class Client(protocol.Protocol):
     return move
 
   def updateNode(self, data):
-    pass
+    id = int(data[0])
+    status = data[3]
+    self.grid.getNode(id).setStatus(status)
 
   def updatePlayerState(self, data):
-    pass
+    name = data[1]
+    unused, alive, dead = data[2], data[4], data[3]
+    if name == 'PG':
+      self.myMunchers['UNUSED'] = unused
+      self.myMunchers['ALIVE'] = alive
+      self.myMunchers['DEAD'] = dead
+    else:
+      self.oppMunchers['UNUSED'] = unused
+      self.oppMunchers['ALIVE'] = alive
+      self.oppMunchers['DEAD'] = dead
 
   def makeMove(self):
     pass
