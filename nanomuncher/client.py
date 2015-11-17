@@ -90,12 +90,14 @@ class Client(protocol.Protocol):
       'UNUSED': 10,
       'ALIVE': 0,
       'DEAD': 0
-    },
+    }
     self.oppMunchers = {
       'UNUSED': 10,
       'ALIVE': 0,
       'DEAD': 0
     }
+    self.myScore = 0
+    self.oppScore = 0
 
   def updateNode(self, data):
     id = int(data[0])
@@ -107,23 +109,25 @@ class Client(protocol.Protocol):
     self.grid.getNode(id).setStatus(status)
 
   def updatePlayerState(self, data):
-    name = data[1]
-    unused, alive, dead = data[2], data[4], data[3]
-    if name == 'PG':
+    name = data[1].strip()
+    unused, alive, dead, score = int(data[2]), int(data[4]), int(data[3]), int(data[5])
+    if name == self.name:
       self.myMunchers['UNUSED'] = unused
       self.myMunchers['ALIVE'] = alive
       self.myMunchers['DEAD'] = dead
+      self.myScore = score
     else:
       self.oppMunchers['UNUSED'] = unused
       self.oppMunchers['ALIVE'] = alive
       self.oppMunchers['DEAD'] = dead
+      self.oppScore = score
 
   def makeMove(self):
-    print 'LEN: {0}'.format(len(self.grid.candidates))
     return random.choice(self.grid.candidates)
 
   def dataReceived(self, data):
     lines = data.strip().split('\n')
+    currScore = self.myScore
     for l in lines:
       if l in ('START', '', 'END'):
         continue
@@ -138,9 +142,13 @@ class Client(protocol.Protocol):
         self.updatePlayerState(state)
     self.grid.updateCandidates()
 
-    move = '{0},LEFT,RIGHT,TOP,DOWN\n'.format(self.makeMove())
-    print 'Move: ' + move
-    self.transport.write(move)
+    if self.myMunchers['UNUSED'] > 0:
+      move = '{0},LEFT,RIGHT,TOP,DOWN\n'.format(self.makeMove())
+      print 'Move: ' + move
+      self.transport.write(move)
+    else:
+      print 'PASS'
+      self.transport.write('PASS')
 
   def connectionMade(self):
     self.grid.fetchCandidates()
