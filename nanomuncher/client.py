@@ -62,32 +62,26 @@ class Grid(object):
   
   def updateCandidates(self):
     newCandidates = []
+    newAlone = []
     for n in self.nodes:
       if self.nodes[n].getStatus() != 'FREE':
         continue
       count = 0
-      for x in (-1, 0, 1):
-        for y in (-1, 0, 1):
-          if x == y == 0:
-            continue
-          if not 0 in (x, y):
-            continue
-          pos = (self.nodes[n].pos[0] + x, self.nodes[n].pos[1] + y)
-          try:
-            neigh = self.nodes[n].getNeighbor(pos)
-            if neigh is not None and neigh.getStatus() == 'FREE':
-              count += 1
-          except IndexError:
-            pass
+      for neigh in self.nodes[n].neighbors:
+        if self.nodes[n].neighbors[neigh].status == 'FREE':
+          count += 1
+
       if count == 1:
         newCandidates.append(n)
+      if count == 0:
+        newAlone.append(n)
     self.candidates[:] = newCandidates
+    self.alone[:] = newAlone
 
   def getNode(self, id):
     return self.nodes[id]
 
 class Client(protocol.Protocol):
-  """Random Client"""
   def __init__(self, name, grid):
     self.name = name
     self.prev_moves = []
@@ -125,7 +119,8 @@ class Client(protocol.Protocol):
       self.oppMunchers['DEAD'] = dead
 
   def makeMove(self):
-    pass
+    print 'LEN: {0}'.format(len(self.grid.candidates))
+    return random.choice(self.grid.candidates)
 
   def dataReceived(self, data):
     lines = data.strip().split('\n')
@@ -142,6 +137,10 @@ class Client(protocol.Protocol):
       elif len(state) == 6:
         self.updatePlayerState(state)
     self.grid.updateCandidates()
+
+    move = '{0},LEFT,RIGHT,TOP,DOWN\n'.format(self.makeMove())
+    print 'Move: ' + move
+    self.transport.write(move)
 
   def connectionMade(self):
     self.grid.fetchCandidates()
@@ -193,6 +192,7 @@ class ClientFactory(protocol.ClientFactory):
     print "Connection lost - goodbye!"
 
 def main():
+    random.seed()
     parser = argparse.ArgumentParser()
     parser.add_argument("name", help="Your name")
     parser.add_argument("-p", "--port", type=int, default="1377", help="Server port to connect to.")
