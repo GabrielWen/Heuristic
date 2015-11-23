@@ -17,8 +17,39 @@ class Client(protocol.Protocol):
     
 
   def connectionMade(self):
-    #TODO: Give init w
-    pass
+    self.W = self.getInitW()
+    strs = ' '.join(map(lambda x: str(round(x, 2)), self.W))
+    print 'Init:\n{0}'.format(strs)
+    self.transport.write(strs)
+
+  def getInitW(self):
+    random.seed()
+    numbers = [0] * self.N
+    negative = self.N / 2
+    acm = -1.0
+
+    for i in xrange(negative-1):
+      now = round(float(random.randint(0, 100) % 100) / 100, 2)
+      numbers[i] = -now if now < abs(acm) else 0
+      acm -= numbers[i]
+
+    numbers[negative-1] = acm
+
+    acm = 1.0
+    for i in xrange(negative, self.N-1):
+      now = round(float(random.randint(0, 100) % 100) / 100, 2)
+      numbers[i] = now if now < acm else 0
+      acm -= numbers[i]
+    numbers[-1] = acm
+
+    numbers = np.asarray(numbers)
+    rng = np.random.RandomState()
+
+    for i in xrange(self.N):
+      permutation = rng.permutation(self.N)
+      numbers = numbers[permutation]
+
+    return numbers
 
   def connectionLost(self, reason):
     reactor.stop()
