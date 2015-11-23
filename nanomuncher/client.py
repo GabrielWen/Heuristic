@@ -114,8 +114,7 @@ class Client(protocol.Protocol):
     }
     self.myScore = 0
     self.oppScore = 0
-    self.lastTimeMove = 0
-    self.currTime = 0
+    self.total = 10
 
   def updateNode(self, data):
     id = int(data[0])
@@ -186,7 +185,7 @@ class Client(protocol.Protocol):
     return visited
 
   def makeMove(self):
-    if self.myMunchers['UNUSED'] == 0 or (self.currTime > 0 and self.currTime < self.lastTimeMove + 2):
+    if self.myMunchers['UNUSED'] == 0 or self.myMunchers['ALIVE'] > (self.total * 0.3):
       print self.myMunchers
       return 'PASS\n'
 
@@ -204,7 +203,7 @@ class Client(protocol.Protocol):
     scores = sorted(map(self.countScore, tar), key=lambda x: x[0], reverse=True)
     moves = []
     nodes = set([])
-    for i in xrange(self.myMunchers['UNUSED']):
+    for i in xrange(self.myMunchers['UNUSED'] if self.myMunchers['UNUSED'] < len(scores) else len(scores)):
       visits = self.nodesWillVisit(Muncher(scores[i][1], scores[i][2]), scores[i][1])
       if len(nodes | visits) > (1.1 * len(nodes)):
         nodes = nodes | visits
@@ -212,11 +211,12 @@ class Client(protocol.Protocol):
       else:
         break
 
-    if len(moves) > 1 and len(moves) > self.myMunchers['UNUSED'] / 3:
+    if len(moves) > 1:
       m = int(math.ceil(self.myMunchers['UNUSED'] / 3.0))
+      if m > len(moves):
+        m = len(moves)
       moves = moves[:m]
 
-    self.lastTimeMove = self.currTime
     return '|'.join(moves) + '\n'
 
   def dataReceived(self, data):
@@ -237,7 +237,6 @@ class Client(protocol.Protocol):
     self.grid.updateCandidates()
 
     next = self.makeMove()
-    self.currTime += 1
     print 'next: ' + next
     self.transport.write(next)
 
