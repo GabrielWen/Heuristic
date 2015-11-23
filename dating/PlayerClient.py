@@ -17,7 +17,7 @@ class Client(protocol.Protocol):
     
 
   def connectionMade(self):
-    self.W = self.getInitW()
+    self.W = self.getDenseInitW()
     strs = ' '.join(map(lambda x: str(round(x, 2)), self.W))
     print 'Init:\n{0}'.format(strs)
     self.transport.write(strs)
@@ -39,6 +39,38 @@ class Client(protocol.Protocol):
     for i in xrange(negative, self.N-1):
       now = round(float(random.randint(0, 100) % 100) / 100, 2)
       numbers[i] = now if now < acm else 0
+      acm -= numbers[i]
+    numbers[-1] = acm
+
+    numbers = np.asarray(numbers)
+    rng = np.random.RandomState()
+
+    for i in xrange(self.N):
+      permutation = rng.permutation(self.N)
+      numbers = numbers[permutation]
+
+    return numbers
+
+  def getDenseInitW(self):
+    random.seed()
+    numbers = [0] * self.N
+    negative = self.N / 2
+    acm = -1.0
+
+    for i in xrange(negative-1):
+      now = round(float(random.randint(0, 100) % 100) / 100, 2)
+      while now > abs(acm) / float(self.N / 4):
+        now = round(float(random.randint(0, 100) % 100) / 100, 2)
+      numbers[i] = -now
+      acm -= numbers[i]
+    numbers[negative-1] = acm
+
+    acm = 1.0
+    for i in xrange(negative, self.N-1):
+      now = round(float(random.randint(0, 100) % 100) / 100, 2)
+      while now > acm / (self.N / 4.0):
+        now = round(float(random.randint(0, 100) % 100) / 100, 2)
+      numbers[i] = now
       acm -= numbers[i]
     numbers[-1] = acm
 
