@@ -5,14 +5,15 @@ import datetime
 import math
 
 from twisted.internet import reactor, protocol
+from scipy.spatial.distance import euclidean
 
-import genVoronoi
 from client import Client, ClientFactory
+
 
 class Player(Client):
   def __init__(self, name, numMoves):
     Client.__init__(self, name)
-    self.grid = np.zeros((1000, 1000))
+    self.grid = [[0.0] * 1000 for _ in xrange(1000)]
     self.oppMoves = []
     self.myMoves = []
 
@@ -33,11 +34,21 @@ class Player(Client):
 
     for item in items[:-1]:
       parts = item.split()
-      player, x, y = parts[0], int(parts[1]), int(parts[2])
+      _, x, y = parts[0], int(parts[1]), int(parts[2])
+      self.oppMoves.append((x, y))
     move = self.make_random_move()
     self.writeMove(move)
 
+  def addOppMoves(self, move):
+    for i in xrange(1000):
+      for j in xrange(1000):
+        self.grid[i][j] -= 1 / (euclidean((i, j), move) ** 2.0)
+    self.oppMoves.append(move)
+
   def writeMove(self, move):
+    for i in xrange(1000):
+      for j in xrange(1000):
+        self.grid[i][j] += 1/ (euclidean((i, j), move) ** 2.0)
     self.myMoves.append(move)
     self.transport.write('{0} {1}'.format(move[0], move[1]))
 
