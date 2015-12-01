@@ -39,6 +39,21 @@ class Player(Client):
   def valid_move(self, move):
     return (0 <= move[0] < 1000 and 0 <= move[1] < 1000) and (not move in self.myMoves) and (not move in self.oppMoves)
 
+  def make_first_move(self):
+    ret = (500, 500)
+    maxScore = self.probe_score(ret[0], ret[1])
+
+    for pad_x in xrange(-10, 11):
+      for pad_y in xrange(-10, 11):
+        now = (ret[0] + pad_x, ret[1] + pad_y)
+        if self.valid_move(now):
+          score = self.probe_score(now[0], now[1])
+          if score > maxScore:
+            ret = now
+            score = maxScore
+
+    return ret
+
   def make_second_move(self):
     x, y = list(self.myMoves)[0]
 
@@ -57,6 +72,8 @@ class Player(Client):
     return ret
 
   def make_move(self):
+    if len(self.myMoves) == 0:
+      return self.make_first_move()
     if len(self.myMoves) == 1:
       return self.make_second_move()
 
@@ -140,7 +157,6 @@ class Player(Client):
     genVoronoi.generate_voronoi_diagram(2, self.numMoves, self.points, self.colors, None, 0, 0)
 
   def decide(self, x, y):
-    print 'Decide:', (x, y)
     self.updatePoints(self.myIdx, self.myCnt, x, y)
     self.myCnt += 1
     self.myMoves.add((x, y))
