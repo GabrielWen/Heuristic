@@ -16,10 +16,19 @@ def getSlope(a, b):
   return float(b[1] - a[1]) / (b[0] - a[0])
 
 def getPoint(slope, mid):
-  x = (10000 / float(1 + (slope ** 2))) ** 0.5
-  y = slope * x
+  points = []
 
-  return (int(mid[0] + x), int(mid[1] + y)), (int(mid[0] - x), int(mid[1] - y))
+  for scaler in (100, 200, 300):
+    x = ((scaler ** 2) / float(1 + (slope ** 2))) ** 0.5
+    y = slope * x
+    points.append((int(mid[0] + x), int(mid[1] + y)))
+    points.append((int(mid[0] - x), int(mid[1] - y)))
+
+  return points
+
+  #x = (10000 / float(1 + (slope ** 2))) ** 0.5
+  #y = slope * x
+  #return (int(mid[0] + x), int(mid[1] + y)), (int(mid[0] - x), int(mid[1] - y))
 
 class Player(Client):
   def __init__(self, name, numMoves):
@@ -43,9 +52,9 @@ class Player(Client):
     ret = (500, 500)
     maxScore = self.probe_score(ret[0], ret[1])
 
-    for pad_x in xrange(-10, 11):
-      for pad_y in xrange(-10, 11):
-        now = (ret[0] + pad_x, ret[1] + pad_y)
+    for pad_x in (-200, -100, 0, 100, 200):
+      for pad_y in (-200, -100, 0, 100, 200):
+        now = (500 + pad_x, 500 + pad_y)
         if self.valid_move(now):
           score = self.probe_score(now[0], now[1])
           if score > maxScore:
@@ -60,8 +69,8 @@ class Player(Client):
     ret = (x, y)
     maxScore = 0
 
-    for add_x in (-100, 100):
-      for add_y in (-100, 100):
+    for add_x in (-300, -200, -100, 100, 200, 300):
+      for add_y in (-300, -200, -100, 100, 200, 300):
         move = (x + add_x, y + add_y)
         if self.valid_move(move):
           score = self.probe_score(move[0], move[1])
@@ -86,12 +95,12 @@ class Player(Client):
         a, b = myMoves[i], myMoves[j]
         slope = -1 * getSlope(a, b)
         mid = ((a[0] + b[0]) / 2, (a[1] + b[1]) / 2)
-        test1, test2 = getPoint(slope, mid)
+        points = getPoint(slope, mid)
 
-        for t in (test1, test2):
+        for t in points:
           if not self.valid_move(t):
-            for pad_x in (-20, -10, 10, 20):
-              for pad_y in (-20, -10, 10, 20):
+            for pad_x in (-10, 10):
+              for pad_y in (-10, 10):
                 if self.valid_move((t[0] + pad_x, t[1] + pad_y)):
                   score = self.probe_score(t[0] + pad_x, t[1] + pad_y)
                   if score > maxScore:
@@ -104,10 +113,13 @@ class Player(Client):
             ret = t
             maxScore = score
 
+    #TODO: Use some random approach to prevent clustering
+
     return ret
 
   def dataReceived(self, data):
     print 'Player {0} Received: {1}'.format(self.name, data)
+    print 'Round:', self.myCnt + 1
     line = data.strip()
     items = line.split('\n')
     if items[-1] == 'TEAM':
