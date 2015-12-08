@@ -44,6 +44,8 @@ class Player(Client):
     self.oppIdx = 0
     self.myCnt = 0
     self.oppCnt = 0
+    self.time = time.time()
+    self.rng = np.random.RandomState()
 
   def valid_move(self, move):
     return (0 <= move[0] < 1000 and 0 <= move[1] < 1000) and (not move in self.myMoves) and (not move in self.oppMoves)
@@ -69,8 +71,8 @@ class Player(Client):
     ret = (x, y)
     maxScore = 0
 
-    for add_x in (-300, -200, -100, 100, 200, 300):
-      for add_y in (-300, -200, -100, 100, 200, 300):
+    for add_x in (-300, -150, 100, 150, 300):
+      for add_y in (-300, -150, 100, 150, 300):
         move = (x + add_x, y + add_y)
         if self.valid_move(move):
           score = self.probe_score(move[0], move[1])
@@ -90,8 +92,14 @@ class Player(Client):
     maxScore = 0
     myMoves = list(self.myMoves)
 
-    for i in xrange(len(myMoves)-1):
-      for j in xrange(i+1, len(myMoves)):
+    rows = np.array(range(len(myMoves)-1), dtype=np.int)
+    permutation = self.rng.permutation(len(rows))
+    rows = rows[permutation]
+    for i in rows:
+      cols = np.array(range(i+1, len(myMoves)), dtype=np.int)
+      permutation = self.rng.permutation(len(cols))
+      cols = cols[permutation]
+      for j in cols:
         a, b = myMoves[i], myMoves[j]
         slope = -1 * getSlope(a, b)
         mid = ((a[0] + b[0]) / 2, (a[1] + b[1]) / 2)
@@ -113,6 +121,9 @@ class Player(Client):
             ret = t
             maxScore = score
 
+        if time.time() - self.time > 20:
+          return ret
+
     #TODO: Use some random approach to prevent clustering
 
     return ret
@@ -120,6 +131,7 @@ class Player(Client):
   def dataReceived(self, data):
     print 'Player {0} Received: {1}'.format(self.name, data)
     print 'Round:', self.myCnt + 1
+    self.time = time.time()
     line = data.strip()
     items = line.split('\n')
     if items[-1] == 'TEAM':
