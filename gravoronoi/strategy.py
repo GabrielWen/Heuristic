@@ -45,6 +45,7 @@ class Player(Client):
     self.myCnt = 0
     self.oppCnt = 0
     self.time = time.time()
+    self.timeUsed = 0
     self.rng = np.random.RandomState()
 
   def valid_move(self, move):
@@ -88,6 +89,9 @@ class Player(Client):
     if len(self.myMoves) == 1:
       return self.make_second_move()
 
+    timeCanUse = 120 - self.timeUsed
+    start = time.time()
+
     ret = (0, 0)
     maxScore = 0
     myMoves = list(self.myMoves)
@@ -107,24 +111,23 @@ class Player(Client):
 
         for t in points:
           if not self.valid_move(t):
-            for pad_x in (-10, 10):
-              for pad_y in (-10, 10):
+            for pad_x in (-20, -10, 10, 20):
+              for pad_y in (-20, -10, 10, 20):
+                if time.time() - start > timeCanUse / 2:
+                  return ret
                 if self.valid_move((t[0] + pad_x, t[1] + pad_y)):
                   score = self.probe_score(t[0] + pad_x, t[1] + pad_y)
                   if score > maxScore:
                     ret = (t[0] + pad_x, t[1] + pad_y)
                     maxScore = score
-            continue
-            
-          score = self.probe_score(t[0], t[1])
-          if score > maxScore:
-            ret = t
-            maxScore = score
+          else:
+            score = self.probe_score(t[0], t[1])
+            if score > maxScore:
+              ret = t
+              maxScore = score
 
-        if time.time() - self.time > 20:
-          return ret
-
-    #TODO: Use some random approach to prevent clustering
+          if time.time() - start > timeCanUse / 2:
+            return ret
 
     return ret
 
@@ -183,6 +186,8 @@ class Player(Client):
   def decide(self, x, y):
     self.updatePoints(self.myIdx, self.myCnt, x, y)
     self.myCnt += 1
+    self.timeUsed = time.time() - self.time
+    self.time = time.time()
     self.myMoves.add((x, y))
     self.transport.write('{0} {1}'.format(x, y))
 
