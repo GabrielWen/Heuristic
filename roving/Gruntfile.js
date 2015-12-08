@@ -34,6 +34,24 @@ module.exports = function(grunt) {
         ],
         tasks: ['jshint', 'express:server']
       }
+    },
+    browserify: {
+      options: {
+        transform: ['reactify'],
+        borwserifyOptions: {
+          fullPaths: false
+        }
+      },
+      game: {
+        files: {
+          'static/index.js': [
+            'src/game.jsx'
+          ]
+        },
+        options: {
+          watch: true
+        }
+      }
     }
   });
 
@@ -43,5 +61,5 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-jsxhint');
   grunt.loadNpmTasks('grunt-browserify');
 
-  grunt.registerTask('default', ['jshint', 'express:server', 'watch:server']);
+  grunt.registerTask('default', ['jshint', 'browserify', 'express:server', 'watch:server']);
 };
