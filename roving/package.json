@@ -25,7 +25,9 @@
     "express": "^4.12.4",
     "lodash": "^3.9.3",
     "jade": "^1.9.2",
-    "moment": "^2.9.0"
+    "moment": "^2.9.0",
+    "consolidate": "^0.13.1",
+    "mustache": "^2.2.0"
   },
   "devDependencies": {
     "browserify": "^10.2.4",
