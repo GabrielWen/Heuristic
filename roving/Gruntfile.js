@@ -32,7 +32,7 @@ module.exports = function(grunt) {
         '<%= jshint.server %>',
         '<%= jshint.common %>'
         ],
-        tasks: ['jshint', 'express:server']
+        tasks: ['jshint', 'browserify', 'express:server']
       }
     },
     browserify: {
