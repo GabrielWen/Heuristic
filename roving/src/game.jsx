@@ -4,8 +4,6 @@ var Router = require('react-router');
 var React = require('react');
 var Button = require('react-bootstrap').Button;
 
-var Example = require('./grid.jsx');
-
 var DefaultRoute = Router.DefaultRoute;
 var Link = Router.Link;
 var Route = Router.Route;
@@ -15,7 +13,7 @@ var Game = React.createClass({
   render: function() {
     return (
       <div>
-        <Example/>
+        <h1>Hello World from JSX</h1>
       </div>
     );
   }
