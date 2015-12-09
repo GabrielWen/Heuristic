@@ -9,12 +9,13 @@ var RouteHandler = Router.RouteHandler;
 
 var React = require('react');
 var Button = require('react-bootstrap').Button;
+var Example = require('./grid.jsx');
 
 var Game = React.createClass({
   render: function() {
     return (
       <div>
-        <h1>JSX TEST</h1>
+        <Example/>
       </div>
     );
   }
