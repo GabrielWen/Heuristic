@@ -7,7 +7,7 @@ var EventEmitter = require('events').EventEmitter;
 var util = require('util');
 var _lo = require('lodash');
 
-var constants = require('../constants');
+var constants = require('constants');
 
 
 /**

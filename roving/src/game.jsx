@@ -1,19 +1,25 @@
 'use strict';
 
+var _lo = require('lodash');
 var Router = require('react-router');
 var React = require('react');
-var Button = require('react-bootstrap').Button;
+var Table = require('react-bootstrap').Table;
 
 var DefaultRoute = Router.DefaultRoute;
 var Link = Router.Link;
 var Route = Router.Route;
 var RouteHandler = Router.RouteHandler;
 
+var Point = require('./components/Point.jsx');
+
 var Game = React.createClass({
   render: function() {
+    
     return (
       <div>
-        <h1>Hello World from JSX</h1>
+        <Point start={false} bomb={false} flipped={false}/>
+        <Point start={false} bomb={true} flipped={false}/>
+        <Point start={true} bomb={true} flipped={false}/> <Point start={true} bomb={true} flipped={true}/>
       </div>
     );
   }

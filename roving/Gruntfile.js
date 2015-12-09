@@ -10,7 +10,7 @@ module.exports = function(grunt) {
       common: ['main.js'],
       frontend: {
         files: {
-          game: ['src/*.+(js|jsx)'],
+          game: ['src/**/*.+(js|jsx)'],
           common: ['src/common/*.+(js|jsx)']
         },
         options: pkg.jshintConfig
@@ -41,7 +41,10 @@ module.exports = function(grunt) {
         '<%= jshint.gruntfile %>',
         'views/*'
         ],
-        tasks: ['jshint', 'browserify', 'express:server']
+        tasks: ['jshint', 'browserify', 'express:server'],
+        options: {
+          spawn: false
+        }
       }
     },
     browserify: {
