@@ -7,8 +7,14 @@ module.exports = function(grunt) {
     pkg: pkg,
     jshint: {
       gruntfile: ['Gruntfile.js'],
-      common: ['src/common/*.js'],
-      server: ['main.js', 'src/*.js'],
+      common: ['main.js'],
+      frontend: {
+        files: {
+          game: ['src/*.+(js|jsx)'],
+          common: ['src/common/*.+(js|jsx)']
+        },
+        options: pkg.jshintConfig
+      },
       options: {
         devel: true,
         strict: true,
@@ -29,8 +35,11 @@ module.exports = function(grunt) {
       },
       server: {
         files: [
-        '<%= jshint.server %>',
-        '<%= jshint.common %>'
+        '<%= jshint.frontend.files.game %>',
+        '<%= jshint.frontend.files.common %>',
+        '<%= jshint.common %>',
+        '<%= jshint.gruntfile %>',
+        'views/*'
         ],
         tasks: ['jshint', 'browserify', 'express:server']
       }

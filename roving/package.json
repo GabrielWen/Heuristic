@@ -12,11 +12,26 @@
     "url": "https://github.com/GabrielWen/Heuristic.git"
   },
   "jshintConfig": {
+    "browserify": true,
+    "browser": true,
+    "jasmine": true,
+    "devel": true,
+    "undef": true,
     "strict": true,
-    "node": true,
     "predef": [
       "-Promise"
-    ]
+    ],
+    "globals": {
+      "APP_VERSION": true,
+      "Raven": true,
+      "FIREBASE_URL": true,
+      "DISPATCHER_URL": true,
+      "OH_WORK_HOUR": true,
+      "GA": true,
+      "google": true,
+      "GOOGLE_API_KEY": true,
+      "jest": true
+    }
   },
   "dependencies": {
     "bluebird": "^2.9.30",

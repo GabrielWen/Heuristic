@@ -1,3 +1,5 @@
+'use strict';
+
 var React = require('react');
 var Router = require('react-router');
 var ReactDataGrid = require('react-data-grid');
@@ -25,9 +27,6 @@ function createRows(numberOfRows){
 }
 
 //function to retrieve a row for a given index
-var rowGetter = function(i){
-  return _rows[i];
-};
 
 //Columns definition
 var columns = [
@@ -66,17 +65,17 @@ var columns = [
   name: 'Expected Complete',
   editable : true
 }
-]
+];
 
 
 var Example = React.createClass({displayName: "Example",
 
   getInitialState : function(){
-    return {rows : createRows(1000)}
+    return {rows : createRows(1000)};
   },
 
   rowGetter : function(rowIdx){
-    return this.state.rows[rowIdx]
+    return this.state.rows[rowIdx];
   },
 
   handleRowUpdated : function(e){
@@ -95,7 +94,7 @@ var Example = React.createClass({displayName: "Example",
       rowsCount: this.state.rows.length, 
       minHeight: 500, 
       onRowUpdated: this.handleRowUpdated})
-    )
+    );
   }
 
 });

@@ -1,15 +1,15 @@
 'use strict';
 
 var Router = require('react-router');
+var React = require('react');
+var Button = require('react-bootstrap').Button;
+
+var Example = require('./grid.jsx');
 
 var DefaultRoute = Router.DefaultRoute;
 var Link = Router.Link;
 var Route = Router.Route;
 var RouteHandler = Router.RouteHandler;
-
-var React = require('react');
-var Button = require('react-bootstrap').Button;
-var Example = require('./grid.jsx');
 
 var Game = React.createClass({
   render: function() {
