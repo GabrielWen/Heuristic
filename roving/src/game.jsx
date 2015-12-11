@@ -12,20 +12,15 @@ var RouteHandler = Router.RouteHandler;
 
 var Point = require('./common/Point.jsx');
 var Car = require('./common/Car.jsx');
-
+var Grid = require('./components/Grid.jsx');
 var Game = React.createClass({
   render: function() {
-
     return (
       <div>
-        <Point start={false} bomb={false} flipped={false}/>
         <Car isPilotless={true} carLabel={"1"}/>
-        <Point start={false} bomb={true} flipped={false}/>
-        <Point start={true} bomb={true} flipped={false}/>
         <Car isPilotless={true} carLabel={"2"}/>
-        <Point start={true} bomb={true} flipped={true}/>
-        <Car isPilotless={false}/>
-      </div>
+      <div>
+      <Grid/>
     );
   }
 });
