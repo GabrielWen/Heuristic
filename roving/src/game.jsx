@@ -11,16 +11,17 @@ var Route = Router.Route;
 var RouteHandler = Router.RouteHandler;
 
 var Grid = require('./components/Grid.jsx');
+var Game = require('./components/Game.jsx');
 
-var Game = React.createClass({
+var App = React.createClass({
   render: function() {
     
-    return <Grid/>;
+    return <Game/>;
   }
 });
 
 var routes = (
-  <Route name="game" path="/" handler={Game}/>
+  <Route name="game" path="/" handler={App}/>
 );
 
 Router.run(routes, function(Handler) {
