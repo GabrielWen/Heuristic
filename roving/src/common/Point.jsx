@@ -10,14 +10,14 @@ var Point = React.createClass({
     flipped: React.PropTypes.bool.isRequired
   },
   render: function() {
-    var pic = <img src="/static/figures/dot.png" height="5" width="5"/>;
+    var pic = <img src="/static/figures/dotII.png" height="40" width="40"/>;
 
     if (this.props.start === false && this.props.bomb === true) {
-      pic = <img src="/static/figures/bombs.gif" height="5" width="5"/>;
+      pic = <img src="/static/figures/bombs.gif" height="40" width="40"/>;
     }
 
     if (this.props.start === true && this.props.bomb === true && this.props.flipped === true) {
-      pic = <img src="/static/figures/bombsBurst.jpg" height="10" width="10"/>;
+      pic = <img src="/static/figures/bombsBurstII.jpg" height="40" width="40"/>;
     }
 
     return (
