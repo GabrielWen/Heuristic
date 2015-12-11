@@ -32,6 +32,9 @@ var Game = React.createClass({
   test: function() {
     console.log('Game TEST');
   },
+  handleCellClick: function(i, j) {
+    console.log(util.format('handleCellClick: %s %s', i, j));
+  },
   render: function() {
     var title = this.state.gameInit ? util.format('Game Playing: %s x %s with %s bombs and %s rovers',
                                       this.state.gameConfig.numRows, this.state.gameConfig.numCols,
@@ -47,11 +50,65 @@ var Game = React.createClass({
     ) : null;
 
     return (
-      <Panel header={title}>
-        {this.state.gameInit ? null : <SettingForm handleSubmit={GameActions.handleGameInit}/>}
-        {button}
-      </Panel>
+      <div>
+        <Panel header={title}>
+          {this.state.gameInit ? null : <SettingForm handleSubmit={GameActions.handleGameInit}/>}
+          {button}
+        </Panel>
+        <Grid grid={this.state.grid} gameInit={this.state.gameInit} gameStart={this.state.gameStart}
+              gameConfig={this.state.gameConfig} handleClick={this.handleCellClick}/>
+      </div>
     );
+  }
+});
+
+var Grid = React.createClass({
+  render: function() {
+    if (!this.props.gameInit || _lo.isEmpty(this.props.grid)) {
+      return null;
+    }
+
+    var ret = [];
+    _lo.times(this.props.gameConfig.numRows, function(i) {
+      _lo.times(this.props.gameConfig.numCols, function(j) {
+        ret.push(
+          <div onClick={_lo.partial(this.props.handleClick, i, j)}>
+            <Cell state={this.props.grid[i][j]} gameStart={this.props.gameStart}/>
+          </div>
+        );
+      }, this);
+    }, this);
+
+    return <div>{ret}</div>;
+  }
+});
+
+var Cell = React.createClass({
+  render: function() {
+    var img = '';
+    switch(this.props.state) {
+      case constants.State.CLEAR:
+        img = constants.Figures.dot;
+        break;
+      case constants.State.BOMB:
+        img = this.props.gameStart ? constants.dot : constants.Figures.bombs;
+        break;
+      case constants.State.BURST:
+        img = constants.Figures.burst;
+        break;
+      case constants.State.ROVER:
+        img = constants.Figures.rover;
+        break;
+      case constants.State.PLAYER:
+        img = constants.Figures.player;
+        break;
+      case constants.State.DEST:
+        //TODO
+        break;
+      default:
+    }
+
+    return <img src={img}/>;
   }
 });
 

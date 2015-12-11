@@ -26,3 +26,11 @@ constants.State = keyMirror({
   DEST: null,
   BURST: null
 });
+
+constants.Figures = {
+  dot: '/static/figures/dot.png',
+  bombs: '/static/figures/bombs.gif',
+  burst: '/static/figures/bombBurst.jpg',
+  rover: '/static/figures/pilotlessRover.png',
+  player: '/static/figures/spaceShip.jpg'
+};
