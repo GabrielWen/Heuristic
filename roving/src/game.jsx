@@ -10,7 +10,7 @@ var Link = Router.Link;
 var Route = Router.Route;
 var RouteHandler = Router.RouteHandler;
 
-var Point = require('./components/Point.jsx');
+var Point = require('./common/Point.jsx');
 
 var Game = React.createClass({
   render: function() {
