@@ -12,6 +12,8 @@ var GameStores = BaseStore.createStore({
     this.gameConfig = null;
     this.alertInfo = null;
     this.grid = null;
+    this.gameInit = false; //Init: Setting done, one player setting bombs
+    this.gameStart = false; //Start: Bombs setting is done, another start traversing
   },
 
   //Getters
@@ -24,17 +26,29 @@ var GameStores = BaseStore.createStore({
   getAlertInfo: function() {
     return this.alertInfo;
   },
+  getGameInit: function() {
+    return this.gameInit;
+  },
+  getGameStart: function() {
+    return this.gameStart;
+  },
 
-  handleGameStart: function(gameConfig) {
-    console.log(util.format('In GAMESTORE: %s\n', JSON.stringify(gameConfig)));
+  handleGameInit: function(gameConfig) {
     this.gameConfig = gameConfig;
+    this.gameInit = true;
+    this.emitChange();
+  },
+
+  handleGameStart: function() {
+    this.gameStart = true;
+    this.emitChange();
   }
 });
 
 GameStores.dispatchToken = AppDispatcher.register(function(action) {
   switch(action.type) {
-    case constants.ActionType.GAME_START:
-      GameStores.handleGameStart(action.gameConfig);
+    case constants.ActionType.GAME_INIT:
+      GameStores.handleGameInit(action.gameConfig);
       break;
     default:
   }

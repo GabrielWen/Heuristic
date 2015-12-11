@@ -20,7 +20,9 @@ function getState() {
   return {
     gameConfig: GameStores.getGameConfig(),
     alertInfo: GameStores.getAlertInfo(),
-    grid: GameStores.getGrid()
+    grid: GameStores.getGrid(),
+    gameInit: GameStores.getGameInit(),
+    gameStart: GameStores.getGameStart()
   };
 }
 
@@ -30,7 +32,7 @@ var Game = React.createClass({
   },
   componentDidMount: function() {
     GameStores.addChangeListener(this._onChange);
-    InitFormStores.attachOnSubmit(GameActions.gameStart);
+    InitFormStores.attachOnSubmit(GameActions.gameInit);
   },
   componentWillUnmount: function() {
     GameStores.removeChangeListener(this._onChange);
@@ -39,7 +41,12 @@ var Game = React.createClass({
     this.setState(getState());
   },
   render: function() {
-    return <InitForm/>;
+    console.log(this.state);
+    if (!this.state.gameInit && !this.gameStart) {
+      return <InitForm/>;
+    } else {
+      return <Grid/>;
+    }
   }
 });
 

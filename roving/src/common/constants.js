@@ -12,6 +12,7 @@ constants.ActionType = keyMirror({
   POINT_FLIPPED: null,
   INIT_FORM_CHANGE: null,
   INIT_FORM_SUBMIT: null,
+  GAME_INIT: null,
   GAME_START: null
 });
 

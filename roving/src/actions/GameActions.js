@@ -4,9 +4,9 @@ var AppDispatcher = require('../dispatcher');
 var constants = require('../common/constants');
 
 var GameActions = {
-  gameStart: function(gameConfig) {
+  gameInit: function(gameConfig) {
     AppDispatcher.dispatch({
-      type: constants.ActionType.GAME_START,
+      type: constants.ActionType.GAME_INIT,
       gameConfig: gameConfig
     });
   }
