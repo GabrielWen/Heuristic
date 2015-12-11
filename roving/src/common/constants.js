@@ -24,15 +24,19 @@ constants.Figures = {
 };
 
 constants.DefaultSetting = {
-  numRows: 50,
-  numCols: 50,
+  numRows: 20,
+  numCols: 20,
   numBombs: 10,
-  numRovers: 5
+  numRovers: 5,
+  picSize: 25
 };
 
 constants.CellState = keyMirror({
   CLEAN: null,
   BOMB: null,
   BURST: null,
-  CLEARED: null
+  CLEARED: null,
+  ROVER: null,
+  PLAYER: null,
+  DEST: null
 });

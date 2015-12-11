@@ -7,9 +7,12 @@ var AppDispatcher = require('../dispatcher');
 var BaseStore = require('../common/BaseStore');
 var constants = require('../common/constants');
 
+function initGrid(numRows, numCols) {
+  var grid = [];
+}
+
 var GameStores = BaseStore.createStore({
   setDefaultData: function() {
-    this.gameConfig = null;
     this.alertInfo = null;
     this.grid = null;
     this.gameInit = false; //Init: Setting done, one player setting bombs
@@ -19,9 +22,6 @@ var GameStores = BaseStore.createStore({
   //Getters
   getGrid: function() {
     return this.grid;
-  },
-  getGameConfig: function() {
-    return this.gameConfig;
   },
   getAlertInfo: function() {
     return this.alertInfo;
@@ -33,12 +33,6 @@ var GameStores = BaseStore.createStore({
     return this.gameStart;
   },
 
-  handleGameInit: function(gameConfig) {
-    this.gameConfig = gameConfig;
-    this.gameInit = true;
-    this.emitChange();
-  },
-
   handleGameStart: function() {
     this.gameStart = true;
     this.emitChange();
@@ -48,7 +42,6 @@ var GameStores = BaseStore.createStore({
 GameStores.dispatchToken = AppDispatcher.register(function(action) {
   switch(action.type) {
     case constants.ActionType.GAME_INIT:
-      GameStores.handleGameInit(action.gameConfig);
       break;
     default:
   }

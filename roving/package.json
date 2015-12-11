@@ -42,8 +42,7 @@
     "jade": "^1.9.2",
     "moment": "^2.9.0",
     "consolidate": "^0.13.1",
-    "mustache": "^2.2.0",
-    "react-data-grid": "^0.13.22"
+    "mustache": "^2.2.0"
   },
   "devDependencies": {
     "flux": "^2.0.3",

@@ -10,13 +10,16 @@ var InitFormStores = BaseStore.createStore({
   setDefaultData: function() {
     this.formValue = _lo.clone(constants.DefaultSetting);
     this.alertInfo = null;
-    this.onSubmit = null;
+    this.gameInit = false;
+    this.gameStart = false;
   },
 
   getState: function() {
     return {
       formValue: this.formValue,
-      alertInfo: this.alertInfo
+      alertInfo: this.alertInfo,
+      gameInit: this.gameInit,
+      gameStart: this.gameStart
     };
   },
 
@@ -46,10 +49,6 @@ var InitFormStores = BaseStore.createStore({
     this.emitChange();
   },
 
-  attachOnSubmit: function(cb) {
-    this.onSubmit = cb;
-  },
-
   handleFormSubmit: function() {
     if (!_lo.some(this.formValue, _lo.isNumber) || _lo.some(this.formValue, function(n) {return n <= 0;})) {
       this.alertInfo = {
@@ -57,7 +56,7 @@ var InitFormStores = BaseStore.createStore({
         msg: 'Invalid input...'
       };
     } else {
-      setTimeout(_lo.partial(this.onSubmit, this.formValue));
+      this.gameInit = true;
     }
 
     this.emitChange();
