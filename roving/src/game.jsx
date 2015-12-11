@@ -17,10 +17,8 @@ var Game = React.createClass({
   render: function() {
     return (
       <div>
-        <Car isPilotless={true} carLabel={"1"}/>
-        <Car isPilotless={true} carLabel={"2"}/>
-      <div>
-      <Grid/>
+        <Grid/>
+      </div>
     );
   }
 });

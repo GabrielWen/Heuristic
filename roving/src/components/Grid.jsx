@@ -5,6 +5,7 @@ var React = require('react');
 var Table = require('react-bootstrap').Table;
 
 var constants = require('../common/constants');
+var Car = require('../common/Car.jsx');
 
 function heads(numCols) {
   var cols = [];
@@ -20,8 +21,10 @@ function initGrid(numRows, numCols) {
 
   _lo.times(numRows, function(i) {
     var row = [];
+    var count = 0;
     _lo.times(numCols, function(j) {
-      row.push(<td><img src={constants.Figures.bomb}/></td>);
+      row.push(<td><Car isPilotless={true} carLabel={count.toString()}/></td>);
+      count ++;
     });
     ret.push(<tr>{row}</tr>);
   });
