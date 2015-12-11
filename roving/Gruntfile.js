@@ -10,8 +10,7 @@ module.exports = function(grunt) {
       common: ['main.js'],
       frontend: {
         files: {
-          game: ['src/**/*.+(js|jsx)'],
-          common: ['src/common/*.+(js|jsx)']
+          game: ['src/**/*.+(js|jsx)']
         },
         options: pkg.jshintConfig
       },
@@ -36,7 +35,6 @@ module.exports = function(grunt) {
       server: {
         files: [
         '<%= jshint.frontend.files.game %>',
-        '<%= jshint.frontend.files.common %>',
         '<%= jshint.common %>',
         '<%= jshint.gruntfile %>',
         'views/*'
@@ -57,7 +55,7 @@ module.exports = function(grunt) {
       game: {
         files: {
           'static/index.js': [
-            'src/game.jsx'
+            'src/app.jsx'
           ]
         },
         options: {
