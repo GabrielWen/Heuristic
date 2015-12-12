@@ -12,7 +12,7 @@ var Cell = React.createClass({
         img = constants.Figures.dot;
         break;
       case constants.State.BOMB:
-        img = this.props.gameStart ? constants.dot : constants.Figures.bombs;
+        img = this.props.gameStart ? constants.Figures.dot : constants.Figures.bombs;
         break;
       case constants.State.BURST:
         img = constants.Figures.burst;

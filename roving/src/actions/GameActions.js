@@ -17,6 +17,12 @@ var GameActions = {
       i: i,
       j: j
     });
+  },
+
+  handleStartPlay: function() {
+    AppDispatcher.dispatch({
+      type: constants.ActionType.GAME_PLAY
+    });
   }
 };
 
