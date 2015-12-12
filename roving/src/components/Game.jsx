@@ -32,9 +32,6 @@ var Game = React.createClass({
   _onChange: function() {
     this.setState(GameStores.getState());
   },
-  test: function() {
-    console.log('Game TEST');
-  },
   handleCellClick: function(i, j) {
     if (!this.state.gameInit || this.state.gameStart) {
       return;
@@ -43,6 +40,9 @@ var Game = React.createClass({
   },
   handleStartPlay: function() {
     GameActions.handleStartPlay();
+  },
+  handleAddRover: function() {
+    
   },
   keyboardHandler: function(e) {
     if (!this.state.gameStart || e.keyCode < 37 || e.keyCode > 40) {
@@ -65,6 +65,8 @@ var Game = React.createClass({
       </ButtonGroup>
     ) : null;
 
+    var addRoverButton = this.state.gameStart ? <Button bsStyle="success" onClick={this.handleAddRover}>Add Rover</Button> : null;
+
     var alertInfo = _lo.isEmpty(this.state.alertInfo) ? null : <Alert bsStyle={this.state.alertInfo.bsStyle}>{this.state.alertInfo.msg}</Alert>;
 
     return (
@@ -74,6 +76,7 @@ var Game = React.createClass({
           {button}
         </Panel>
         {alertInfo}
+        {addRoverButton}
         <Grid grid={this.state.grid} gameInit={this.state.gameInit} gameStart={this.state.gameStart}
               gameConfig={this.state.gameConfig} handleClick={this.handleCellClick}/>
       </div>

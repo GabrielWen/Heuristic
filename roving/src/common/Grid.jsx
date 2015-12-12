@@ -18,7 +18,7 @@ var Grid = React.createClass({
       _lo.times(this.props.gameConfig.numCols, function(j) {
         //TODO: How to make it relative?
         var style = {
-          top: i * constants.DefaultSetting.picSize + 250,
+          top: i * constants.DefaultSetting.picSize + 300,
           left: j * constants.DefaultSetting.picSize,
           position: 'absolute'
         };

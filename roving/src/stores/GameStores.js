@@ -15,6 +15,8 @@ var GameStores = BaseStore.createStore({
     this.gameStart = false;
     this.alertInfo = null;
     this.bombCount = 0;
+    this.playerPos = null;
+    this.roverCount = 0;
   },
 
   getState: function() {
@@ -24,7 +26,9 @@ var GameStores = BaseStore.createStore({
       gameInit: this.gameInit,
       gameStart: this.gameStart,
       alertInfo: this.alertInfo,
-      bombCount: this.bombCount
+      bombCount: this.bombCount,
+      playerPos: this.playerPos,
+      roverCount: this.roverCount
     };
   },
 
@@ -46,6 +50,8 @@ var GameStores = BaseStore.createStore({
     this.gameConfig = gameConfig;
     this.gameInit = true;
     this.bombCount = gameConfig.numBombs;
+    this.playerPos = [gameConfig.numRows-1, 0];
+    this.roverCount = gameConfig.numRovers;
     this.emitChange();
   },
 
@@ -62,6 +68,13 @@ var GameStores = BaseStore.createStore({
         bsStyle: 'success',
         msg: util.format('Available bombs: %s', this.bombCount)
       };
+    } else if (this.grid[i][j] == constants.State.BOMB) {
+      this.bombCount++;
+      this.grid[i][j] = constants.State.CLEAR;
+      this.alertInfo = {
+        bsStyle: 'success',
+        msg: util.format('Available bombs: %s', this.bombCount)
+      };
     }
 
     this.emitChange();
@@ -69,6 +82,10 @@ var GameStores = BaseStore.createStore({
 
   handleStartPlay: function() {
     this.gameStart = true;
+    this.alertInfo = {
+      bsStyle: 'success',
+      msg: util.format('Available rovers: %s', this.roverCount)
+    };
     this.emitChange();
   }
 });
