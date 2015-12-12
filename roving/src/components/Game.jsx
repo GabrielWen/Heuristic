@@ -9,6 +9,8 @@ var Button = require('react-bootstrap').Button;
 var ButtonGroup = require('react-bootstrap').ButtonGroup;
 var Panel = require('react-bootstrap').Panel;
 var Alert = require('react-bootstrap').Alert;
+var Carousel = require('react-bootstrap').Carousel;
+var CarouselItem = require('react-bootstrap').CarouselItem;
 
 var constants = require('../common/constants');
 var GameActions = require('../actions/GameActions');
@@ -33,6 +35,7 @@ var Game = React.createClass({
     this.setState(GameStores.getState());
   },
   handleCellClick: function(i, j) {
+    //TODO: Need to support selecting rover/player
     if (!this.state.gameInit || this.state.gameStart) {
       return;
     }
@@ -42,14 +45,14 @@ var Game = React.createClass({
     GameActions.handleStartPlay();
   },
   handleAddRover: function() {
-    
+    GameActions.handleAddRover();
   },
   keyboardHandler: function(e) {
     if (!this.state.gameStart || e.keyCode < 37 || e.keyCode > 40) {
       return;
     }
 
-    console.log(constants.Direction[e.keyCode]);
+    GameActions.handleGameMove(e.keyCode);
   },
   render: function() {
     var title = this.state.gameInit ? util.format('Game Playing: %s x %s with %s bombs and %s rovers',

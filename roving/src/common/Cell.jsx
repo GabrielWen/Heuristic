@@ -20,7 +20,13 @@ var Cell = React.createClass({
       case constants.State.ROVER:
         img = constants.Figures.rover;
         break;
+      case constants.State.ROVER_ON_BURST:
+        img = constants.Figures.rover;
+        break;
       case constants.State.PLAYER:
+        img = constants.Figures.player;
+        break;
+      case constants.State.PLAYER_ON_BURST:
         img = constants.Figures.player;
         break;
       case constants.State.DEST:

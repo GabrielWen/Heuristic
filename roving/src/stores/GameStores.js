@@ -18,6 +18,8 @@ var GameStores = BaseStore.createStore({
     this.playerPos = null;
     this.roverCount = 0;
     this.bombLocs = [];
+    this.addingRover = false;
+    this.currPtr = null;
   },
 
   getState: function() {
@@ -30,7 +32,9 @@ var GameStores = BaseStore.createStore({
       bombCount: this.bombCount,
       playerPos: this.playerPos,
       roverCount: this.roverCount,
-      bombLocs: this.bombLocs
+      bombLocs: this.bombLocs,
+      addingRover: this.addingRover,
+      currPtr: this.currPtr
     };
   },
 
@@ -53,6 +57,7 @@ var GameStores = BaseStore.createStore({
     this.gameInit = true;
     this.bombCount = gameConfig.numBombs;
     this.playerPos = [gameConfig.numRows-1, 0];
+    this.currPtr = this.playerPos;
     this.roverCount = gameConfig.numRovers;
     this.emitChange();
   },
@@ -95,6 +100,93 @@ var GameStores = BaseStore.createStore({
       msg: util.format('Available rovers: %s', this.roverCount)
     };
     this.emitChange();
+  },
+
+  handleAddRover: function() {
+    this.addingRover ^= true;
+    if (this.addingRover) {
+      this.alertInfo = {
+        bsStyle: 'warning',
+        msg: 'Adding rover, please press a direction...'
+      };
+    } else {
+      this.alertInfo = {
+        bsStyle: 'success',
+        msg: util.format('Available rovers: %s', this.roverCount)
+      };
+    }
+    this.emitChange();
+  },
+
+  _handlePlaceRover: function(v) {
+    switch(this.grid[v[0]][v[1]]) {
+      case constants.State.ROVER:
+        return false;
+      case constants.State.PLAYER:
+        return false;
+      case constants.State.DEST:
+        return false;
+      case constants.State.PLAYER_ON_BURST:
+        return false;
+      case constants.State.ROVER_ON_BURST:
+        return false;
+      case constants.State.BOMB:
+        this.grid[v[0]][v[1]] = constants.State.BURST;
+        break;
+      case constants.State.BURST:
+        this.grid[v[0]][v[1]] = constants.State.ROVER_ON_BURST;
+        break;
+      default:
+        this.grid[v[0]][v[1]] = constants.State.ROVER;
+    }
+    return true;
+  },
+
+  handleKeyMove: function(code) {
+    /**
+     * Validation
+     */
+    var v = _lo.clone(this.currPtr);
+    switch(code) {
+      case 37:
+        if (this.currPtr[1] === 0) {
+          return;
+        }
+        v[1]--;
+        break;
+      case 38:
+        if (this.currPtr[0] === 0) {
+          return;
+        }
+        v[0]--;
+        break;
+      case 39:
+        if (this.currPtr[1] == this.gameConfig.numCols-1) {
+          return;
+        }
+        v[1]++;
+        break;
+      case 40:
+        if (this.currPtr[0] == this.gameConfig.numRows-1) {
+          return;
+        }
+        v[0]++;
+        break;
+    }
+
+    if (this.addingRover) {
+      if (this._handlePlaceRover(v)) {
+        this.roverCount--;
+        this.alertInfo = {
+          bsStyle: 'success',
+          msg: util.format('Available rovers: %s', this.roverCount)
+        };
+        this.addingRover = false;
+      }
+    } else {
+    }
+
+    this.emitChange();
   }
 });
 
@@ -108,6 +200,12 @@ AppDispatcher.register(function(action) {
       break;
     case constants.ActionType.GAME_PLAY:
       GameStores.handleStartPlay();
+      break;
+    case constants.ActionType.ADD_ROVER:
+      GameStores.handleAddRover();
+      break;
+    case constants.ActionType.GAME_MOVE:
+      GameStores.handleKeyMove(action.keyCode);
       break;
     default:
   }
