@@ -47,6 +47,13 @@ constants.Figures = {
   dest: '/static/figures/dest.png'
 };
 
+constants.Sounds = {
+  dead: '/static/sounds/death.wav',
+  explosion: '/static/sounds/explosion.wav',
+  move: '/static/sounds/move.wav',
+  win: '/static/sounds/win.wav'
+};
+
 constants.Direction = {
   37: 'LEFT',
   38: 'UP',

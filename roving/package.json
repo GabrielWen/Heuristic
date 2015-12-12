@@ -42,7 +42,8 @@
     "jade": "^1.9.2",
     "moment": "^2.9.0",
     "consolidate": "^0.13.1",
-    "mustache": "^2.2.0"
+    "mustache": "^2.2.0",
+    "phaser": "2.4.4"
   },
   "devDependencies": {
     "flux": "^2.0.3",
