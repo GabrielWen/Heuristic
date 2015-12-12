@@ -13,6 +13,8 @@ var GameStores = BaseStore.createStore({
     this.gameConfig = null;
     this.gameInit = false;
     this.gameStart = false;
+    this.alertInfo = null;
+    this.bombCount = 0;
   },
 
   getState: function() {
@@ -20,7 +22,9 @@ var GameStores = BaseStore.createStore({
       grid: this.grid,
       gameConfig: this.gameConfig,
       gameInit: this.gameInit,
-      gmaeStart: this.gameStart
+      gmaeStart: this.gameStart,
+      alertInfo: this.alertInfo,
+      bombCount: this.bombCount
     };
   },
 
@@ -34,9 +38,31 @@ var GameStores = BaseStore.createStore({
       grid.push(row);
     });
 
+    //Set player/dest
+    grid[gameConfig.numRows-1][0] = constants.State.PLAYER;
+
     this.grid = grid;
     this.gameConfig = gameConfig;
     this.gameInit = true;
+    this.bombCount = gameConfig.numBombs;
+    this.emitChange();
+  },
+
+  handleSetBomb: function(i, j) {
+    if (this.bombCount === 0) {
+      this.alertInfo = {
+        bsStyle: 'danger',
+        msg: 'All available bombs are already set'
+      };
+    } else if (this.grid[i][j] == constants.State.CLEAR) {
+      this.bombCount--;
+      this.grid[i][j] = constants.State.BOMB;
+      this.alertInfo = {
+        bsStyle: 'success',
+        msg: util.format('Available bombs: %s', this.bombCount)
+      };
+    }
+
     this.emitChange();
   }
 });
@@ -45,6 +71,9 @@ AppDispatcher.register(function(action) {
   switch(action.type) {
     case constants.ActionType.GAME_INIT:
       GameStores.handleGameInit(action.gameConfig);
+      break;
+    case constants.ActionType.SET_BOMB:
+      GameStores.handleSetBomb(action.i, action.j);
       break;
     default:
   }

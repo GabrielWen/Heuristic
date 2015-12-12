@@ -8,12 +8,14 @@ var ButtonInput = require('react-bootstrap').ButtonInput;
 var Button = require('react-bootstrap').Button;
 var ButtonGroup = require('react-bootstrap').ButtonGroup;
 var Panel = require('react-bootstrap').Panel;
+var Alert = require('react-bootstrap').Alert;
 
 var constants = require('../common/constants');
 var GameActions = require('../actions/GameActions');
 var GameStores = require('../stores/GameStores');
 
 var SettingForm = require('../common/SettingForm.jsx');
+var Grid = require('../common/Grid.jsx');
 
 var Game = React.createClass({
   getInitialState: function() {
@@ -33,7 +35,10 @@ var Game = React.createClass({
     console.log('Game TEST');
   },
   handleCellClick: function(i, j) {
-    console.log(util.format('handleCellClick: %s %s', i, j));
+    if (!this.state.gameInit || this.state.gameStart) {
+      return;
+    }
+    GameActions.handleSetBomb(i, j);
   },
   render: function() {
     var title = this.state.gameInit ? util.format('Game Playing: %s x %s with %s bombs and %s rovers',
@@ -49,66 +54,19 @@ var Game = React.createClass({
       </ButtonGroup>
     ) : null;
 
+    var alertInfo = _lo.isEmpty(this.state.alertInfo) ? null : <Alert bsStyle={this.state.alertInfo.bsStyle}>{this.state.alertInfo.msg}</Alert>;
+
     return (
       <div>
         <Panel header={title}>
           {this.state.gameInit ? null : <SettingForm handleSubmit={GameActions.handleGameInit}/>}
           {button}
         </Panel>
+        {alertInfo}
         <Grid grid={this.state.grid} gameInit={this.state.gameInit} gameStart={this.state.gameStart}
               gameConfig={this.state.gameConfig} handleClick={this.handleCellClick}/>
       </div>
     );
-  }
-});
-
-var Grid = React.createClass({
-  render: function() {
-    if (!this.props.gameInit || _lo.isEmpty(this.props.grid)) {
-      return null;
-    }
-
-    var ret = [];
-    _lo.times(this.props.gameConfig.numRows, function(i) {
-      _lo.times(this.props.gameConfig.numCols, function(j) {
-        ret.push(
-          <div onClick={_lo.partial(this.props.handleClick, i, j)}>
-            <Cell state={this.props.grid[i][j]} gameStart={this.props.gameStart}/>
-          </div>
-        );
-      }, this);
-    }, this);
-
-    return <div>{ret}</div>;
-  }
-});
-
-var Cell = React.createClass({
-  render: function() {
-    var img = '';
-    switch(this.props.state) {
-      case constants.State.CLEAR:
-        img = constants.Figures.dot;
-        break;
-      case constants.State.BOMB:
-        img = this.props.gameStart ? constants.dot : constants.Figures.bombs;
-        break;
-      case constants.State.BURST:
-        img = constants.Figures.burst;
-        break;
-      case constants.State.ROVER:
-        img = constants.Figures.rover;
-        break;
-      case constants.State.PLAYER:
-        img = constants.Figures.player;
-        break;
-      case constants.State.DEST:
-        //TODO
-        break;
-      default:
-    }
-
-    return <img src={img}/>;
   }
 });
 

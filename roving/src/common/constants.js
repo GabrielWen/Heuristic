@@ -5,7 +5,8 @@ var keyMirror = require('react/lib/keyMirror');
 var constants = module.exports = {};
 
 constants.ActionType = keyMirror({
-  GAME_INIT: null
+  GAME_INIT: null,
+  SET_BOMB: null
 });
 
 constants.DefaultSetting = {

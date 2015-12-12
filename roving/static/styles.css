@@ -37,6 +37,10 @@ body {
    width: 100%; /* for IE 6 */
 }
 
+.grid {
+  position: relative;
+}
+
 p {
    position: absolute;
    top: 0.4px;
