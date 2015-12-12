@@ -230,6 +230,7 @@ var GameStores = BaseStore.createStore({
       case constants.State.DEST:
         //TODO: Add win logic
         this.gameOver = true;
+        play(constants.Sounds.win).autoplay();
         break;
       case constants.State.BURST:
         this.grid[v[0]][v[1]] = constants.State.PLAYER_ON_BURST;
@@ -272,7 +273,6 @@ var GameStores = BaseStore.createStore({
         v[0]++;
         break;
     }
-
     if (this.addingRover) {
       if (this._handlePlaceRover(v)) {
         this.roverCount--;
