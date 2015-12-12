@@ -82,17 +82,18 @@ var Game = React.createClass({
 
     var alertInfo = _lo.isEmpty(this.state.alertInfo) || this.state.gameOver ? null : <Alert bsStyle={this.state.alertInfo.bsStyle}>{this.state.alertInfo.msg}</Alert>;
 
-    var gameOverInfo = this.state.gameOver ? (
-      <Jumbotron>
-        <h1>Game Over!</h1>
-        <Button bsStyle="success" onClick={this.handleGameReset}>Start Again</Button>
-      </Jumbotron>) : null;
-
     console.log(util.format('Score: %s', this.state.stepCount));
+
+    if (this.state.gameOver) {
+      return (
+      <Jumbotron>
+        <h1>{util.format('Game Over!  Your score is: %s', this.state.stepCount)}</h1>
+        <Button bsStyle="success" onClick={this.handleGameReset}>Start Again</Button>
+      </Jumbotron>);
+    }
 
     return (
       <Grid fluid>
-        {gameOverInfo}
         <Col xs={12} md={6}>
           <Row>
             <Panel header={title}>
@@ -101,7 +102,7 @@ var Game = React.createClass({
             </Panel>
           </Row>
           <Row>
-            <Panel header="Game Area">
+            <Panel header={util.format('Game Area.  Current Score: %s', this.state.stepCount)}>
               <GameGrid grid={this.state.grid} gameInit={this.state.gameInit} gameStart={this.state.gameStart}
                         gameConfig={this.state.gameConfig} handleClick={this.handleCellClick} curr={this.state.currPtr}/>
             </Panel>
@@ -115,22 +116,6 @@ var Game = React.createClass({
         </Col>
       </Grid>
     );
-
-/*
-    return (
-      <div>
-        <Panel header={title}>
-          {this.state.gameInit ? null : <SettingForm handleSubmit={GameActions.handleGameInit}/>}
-          {button}
-        </Panel>
-        {alertInfo}
-        {addRoverButton}
-        {gameOverInfo}
-        <Grid grid={this.state.grid} gameInit={this.state.gameInit} gameStart={this.state.gameStart}
-              gameConfig={this.state.gameConfig} handleClick={this.handleCellClick} curr={this.state.currPtr}/>
-      </div>
-    );
-*/
   }
 });
 
