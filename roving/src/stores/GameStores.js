@@ -23,6 +23,7 @@ var GameStores = BaseStore.createStore({
     this.currPtr = null;
     this.stepCount = 0;
     this.gameOver = false;
+    this.playerWon = false;
   },
 
   getState: function() {
@@ -39,7 +40,8 @@ var GameStores = BaseStore.createStore({
       addingRover: this.addingRover,
       currPtr: this.currPtr,
       stepCount: this.stepCount,
-      gameOver: this.gameOver
+      gameOver: this.gameOver,
+      playerWon: this.playerWon
     };
   },
 
@@ -234,6 +236,7 @@ var GameStores = BaseStore.createStore({
       case constants.State.DEST:
         //TODO: Add win logic
         this.gameOver = true;
+        this.playerWon = true;
         play(constants.Sounds.win).autoplay();
         break;
       case constants.State.BURST:
