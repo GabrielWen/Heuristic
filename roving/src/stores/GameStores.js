@@ -59,6 +59,11 @@ var GameStores = BaseStore.createStore({
     grid[gameConfig.numRows-1][0] = constants.State.PLAYER;
     grid[0][gameConfig.numCols-1] = constants.State.DEST;
 
+    this.alertInfo = {
+      bsStyle: 'success',
+      msg: 'Game init. Place bombs on board or click RandBombs button!'
+    };
+
     this.grid = grid;
     this.gameConfig = gameConfig;
     this.gameInit = true;
