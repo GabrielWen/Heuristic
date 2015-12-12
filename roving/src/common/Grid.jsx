@@ -3,6 +3,7 @@
 var _lo = require('lodash');
 var util = require('util');
 var React = require('react');
+var Table = require('react-bootstrap').Table;
 
 var constants = require('./constants');
 var Cell = require('./Cell.jsx');
@@ -13,30 +14,26 @@ var Grid = React.createClass({
       return null;
     }
 
-    var gridStyle = {
-      width: util.format('%spx', this.props.gameConfig.numCols * constants.DefaultSetting.picSize),
-      height: util.format('%spx', this.props.gameConfig.numRows * constants.DefaultSetting.picSize)
-    };
-
-    var ret = [];
+    var pics = [];
     _lo.times(this.props.gameConfig.numRows, function(i) {
       _lo.times(this.props.gameConfig.numCols, function(j) {
-        var className = '';
-        if (!_lo.isEmpty(this.props.curr) && i == this.props.curr[0] && j == this.props.curr[1]) {
-          className = 'curr-chosen';
+        var picStyle = 'grid-style';
+        if (i == this.props.curr[0] && j == this.props.curr[1]) {
+          picStyle += ' curr-chosen';
+        } else {
+          picStyle += ' curr-not-chosen';
         }
-
-        ret.push(
-          <div className={className} key={util.format('cell-%s-%s', i, j)} onClick={_lo.partial(this.props.handleClick, i, j)}>
-            <Cell state={this.props.grid[i][j]} gameStart={this.props.gameStart}/>
-          </div>
-        );
+        pics.push(<Cell key={util.format('cell-%s-%s', i, j)} state={this.props.grid[i][j]} gameStart={this.props.gameStart}
+                        handleClick={_lo.partial(this.props.handleClick, i, j)} picStyle={picStyle}
+                  />);
       }, this);
     }, this);
 
-    console.log(gridStyle);
+    var gridWidth = {
+      width: this.props.gameConfig.numCols * constants.DefaultSetting.picSize + 10
+    };
 
-    return <div className="grid-style" style={gridStyle}>{ret}</div>;
+    return <div style={gridWidth}>{pics}</div>;
   }
 });
 

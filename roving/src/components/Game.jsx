@@ -18,7 +18,6 @@ var GameStores = require('../stores/GameStores');
 
 var SettingForm = require('../common/SettingForm.jsx');
 var Grid = require('../common/Grid.jsx');
-var Test = require('../common/Test.jsx');
 
 var Game = React.createClass({
   getInitialState: function() {
@@ -90,7 +89,7 @@ var Game = React.createClass({
         </Panel>
         {alertInfo}
         {addRoverButton}
-        <Test grid={this.state.grid} gameInit={this.state.gameInit} gameStart={this.state.gameStart}
+        <Grid grid={this.state.grid} gameInit={this.state.gameInit} gameStart={this.state.gameStart}
               gameConfig={this.state.gameConfig} handleClick={this.handleCellClick} curr={this.state.currPtr}/>
       </div>
     );
