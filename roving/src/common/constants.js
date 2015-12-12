@@ -10,7 +10,8 @@ constants.ActionType = keyMirror({
   GAME_PLAY: null,
   ADD_ROVER: null,
   GAME_MOVE: null,
-  ADD_RANDBOMB: null
+  ADD_RANDBOMB: null,
+  GAME_RESET: null
 });
 
 constants.DefaultSetting = {
@@ -62,3 +63,5 @@ constants.Direction = {
   39: 'RIGHT',
   40: 'DOWN'
 };
+
+constants.PlayerBurstScore = 9999;

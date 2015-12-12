@@ -47,19 +47,20 @@ var Game = React.createClass({
     GameActions.handleAddRover();
   },
   keyboardHandler: function(e) {
-    if (!this.state.gameStart || e.keyCode < 37 || e.keyCode > 40) {
+    if (this.state.gameOver || !this.state.gameStart || e.keyCode < 37 || e.keyCode > 40) {
       return;
     }
 
     GameActions.handleGameMove(e.keyCode);
   },
-  test: function() {
-    console.log('This is test');
-  },
   handleRandBombs: function() {
     GameActions.handleRandBombs();
   },
-
+  handleGameReset: function() {
+    if (window.confirm('Reset will erase current progress, are you sure?')) {
+      GameActions.handleGameReset();
+    }
+  },
   render: function() {
     var title = this.state.gameInit ? util.format('Game Playing: %s x %s with %s bombs and %s rovers',
                                       this.state.gameConfig.numRows, this.state.gameConfig.numCols,
@@ -71,7 +72,7 @@ var Game = React.createClass({
       <ButtonGroup>
         <Button bsStyle="primary" onClick={this.handleStartPlay}>Play</Button>
         <Button bsStyle="primary" onClick={this.handleRandBombs}>RandBombs</Button>
-        <Button bsSylte="danger">Reset</Button>
+        <Button bsSylte="danger" onClick={this.handleGameReset}>Reset</Button>
       </ButtonGroup>
     ) : null;
 

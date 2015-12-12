@@ -22,6 +22,7 @@ var GameStores = BaseStore.createStore({
     this.addingRover = false;
     this.currPtr = null;
     this.stepCount = 0;
+    this.gameOver = false;
   },
 
   getState: function() {
@@ -37,7 +38,8 @@ var GameStores = BaseStore.createStore({
       bombLocs: this.bombLocs,
       addingRover: this.addingRover,
       currPtr: this.currPtr,
-      stepCount: this.stepCount
+      stepCount: this.stepCount,
+      gameOver: this.gameOver
     };
   },
 
@@ -221,9 +223,12 @@ var GameStores = BaseStore.createStore({
         //TODO: Add lose logic
         this.grid[v[0]][v[1]] = constants.State.BURST;
         play(constants.Sounds.explosion).autoplay();
+        this.gameOver = true;
+        this.stepCount = constants.PlayerBurstScore;
         break;
       case constants.State.DEST:
         //TODO: Add win logic
+        this.gameOver = true;
         break;
       case constants.State.BURST:
         this.grid[v[0]][v[1]] = constants.State.PLAYER_ON_BURST;
@@ -307,6 +312,11 @@ var GameStores = BaseStore.createStore({
     }
     play(constants.Sounds.move).autoplay();
     this.emitChange();
+  },
+
+  handleGameReset: function() {
+    this.setDefaultData();
+    this.emitChange();
   }
 });
 
@@ -329,6 +339,9 @@ AppDispatcher.register(function(action) {
       break;
     case constants.ActionType.ADD_RANDBOMB:
       GameStores.handleRandBombs();
+      break;
+    case constants.ActionType.GAME_RESET:
+      GameStores.handleGameReset();
       break;
     default:
   }
