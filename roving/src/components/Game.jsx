@@ -83,7 +83,7 @@ var Game = React.createClass({
     var alertInfo = _lo.isEmpty(this.state.alertInfo) || this.state.gameOver ? null : <Alert bsStyle={this.state.alertInfo.bsStyle}>{this.state.alertInfo.msg}</Alert>;
 
     var gameOverInfo = this.state.gameOver ? (
-      <Jumbotron bsStyle="danger">
+      <Jumbotron>
         <h1>Game Over!</h1>
         <Button bsStyle="success" onClick={this.handleGameReset}>Start Again</Button>
       </Jumbotron>) : null;
