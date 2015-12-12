@@ -12,6 +12,7 @@ var Alert = require('react-bootstrap').Alert;
 var Grid = require('react-bootstrap').Grid;
 var Row = require('react-bootstrap').Row;
 var Col = require('react-bootstrap').Col;
+var Jumbotron = require('react-bootstrap').Jumbotron;
 
 var constants = require('../common/constants');
 var GameActions = require('../actions/GameActions');
@@ -57,7 +58,9 @@ var Game = React.createClass({
     GameActions.handleRandBombs();
   },
   handleGameReset: function() {
-    if (window.confirm('Reset will erase current progress, are you sure?')) {
+    if (this.state.gameOver) {
+      GameActions.handleGameReset();
+    } else if (window.confirm('Reset will erase current progress, are you sure?')) {
       GameActions.handleGameReset();
     }
   },
@@ -76,9 +79,15 @@ var Game = React.createClass({
       </ButtonGroup>
     ) : null;
 
-    var addRoverButton = this.state.gameStart ? <Button bsStyle="success" disabled={this.state.roverCount === 0} onClick={this.handleAddRover}>Add Rover</Button> : null;
+    var addRoverButton = this.state.gameStart && !this.state.gameOver ? <Button bsStyle="success" disabled={this.state.roverCount === 0} onClick={this.handleAddRover}>Add Rover</Button> : null;
 
-    var alertInfo = _lo.isEmpty(this.state.alertInfo) ? null : <Alert bsStyle={this.state.alertInfo.bsStyle}>{this.state.alertInfo.msg}</Alert>;
+    var alertInfo = _lo.isEmpty(this.state.alertInfo) || this.state.gameOver ? null : <Alert bsStyle={this.state.alertInfo.bsStyle}>{this.state.alertInfo.msg}</Alert>;
+
+    var gameOverInfo = this.state.gameOver ? (
+      <Jumbotron bsStyle="danger">
+        <h1>Game Over!</h1>
+        <Button bsStyle="success" onClick={this.handleGameReset}>Start Again</Button>
+      </Jumbotron>) : null;
 
     console.log(util.format('Score: %s', this.state.stepCount));
 
@@ -90,6 +99,7 @@ var Game = React.createClass({
         </Panel>
         {alertInfo}
         {addRoverButton}
+        {gameOverInfo}
         <Grid grid={this.state.grid} gameInit={this.state.gameInit} gameStart={this.state.gameStart}
               gameConfig={this.state.gameConfig} handleClick={this.handleCellClick} curr={this.state.currPtr}/>
       </div>
