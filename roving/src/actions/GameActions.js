@@ -36,6 +36,11 @@ var GameActions = {
       type: constants.ActionType.GAME_MOVE,
       keyCode: keyCode
     });
+  },
+  handleRandBombs: function() {
+    AppDispatcher.dispatch({
+      type: constants.ActionType.ADD_RANDBOMB
+    });
   }
 };
 
