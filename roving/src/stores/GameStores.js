@@ -232,14 +232,12 @@ var GameStores = BaseStore.createStore({
       case constants.State.ROVER_ON_BURST:
         return false;
       case constants.State.BOMB:
-        //TODO: Add lose logic
         this.grid[v[0]][v[1]] = constants.State.BURST;
         play(constants.Sounds.explosion).autoplay();
         this.gameOver = true;
         this.stepCount = constants.PlayerBurstScore;
         break;
       case constants.State.DEST:
-        //TODO: Add win logic
         this.gameOver = true;
         this.playerWon = true;
         play(constants.Sounds.win).autoplay();
