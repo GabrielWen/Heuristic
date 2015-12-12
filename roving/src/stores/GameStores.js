@@ -234,7 +234,6 @@ var GameStores = BaseStore.createStore({
         break;
       case constants.State.BURST:
         this.grid[v[0]][v[1]] = constants.State.PLAYER_ON_BURST;
-        play(constants.Sounds.explosion).autoplay();
         break;
       default:
         this.grid[v[0]][v[1]] = constants.State.PLAYER;
