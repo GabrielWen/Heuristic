@@ -108,14 +108,18 @@ var GameStores = BaseStore.createStore({
         this.bombLocs[util.format('%s-%s', randi, randj)] = true;
       }
     }
+    this.alertInfo = {
+        bsStyle: 'success',
+        msg: 'All bombs are set. Press Play button!'
+      };
     this.emitChange();
   },
 
   _handleSetBomb: function(i, j) {
     if (this.bombCount === 0) {
       this.alertInfo = {
-        bsStyle: 'danger',
-        msg: 'All available bombs are already set'
+        bsStyle: 'success',
+        msg: 'All bombs are set. Press Play button!'
       };
     } else if (this.grid[i][j] == constants.State.CLEAR) {
       if (!this.canAddBomb(i, j)) {
