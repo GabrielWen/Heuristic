@@ -6,7 +6,8 @@ var constants = module.exports = {};
 
 constants.ActionType = keyMirror({
   GAME_INIT: null,
-  SET_BOMB: null
+  SET_BOMB: null,
+  GAME_PLAY: null
 });
 
 constants.DefaultSetting = {

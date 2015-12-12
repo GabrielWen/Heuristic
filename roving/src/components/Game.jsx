@@ -40,6 +40,9 @@ var Game = React.createClass({
     }
     GameActions.handleSetBomb(i, j);
   },
+  handleStartPlay: function() {
+    GameActions.handleStartPlay();
+  },
   render: function() {
     var title = this.state.gameInit ? util.format('Game Playing: %s x %s with %s bombs and %s rovers',
                                       this.state.gameConfig.numRows, this.state.gameConfig.numCols,
@@ -49,7 +52,7 @@ var Game = React.createClass({
     //TODO: onClick here
     var button = this.state.gameInit ? (
       <ButtonGroup>
-        <Button bsStyle="primary">Play</Button>
+        <Button bsStyle="primary" onClick={this.handleStartPlay}>Play</Button>
         <Button bsSylte="danger">Reset</Button>
       </ButtonGroup>
     ) : null;

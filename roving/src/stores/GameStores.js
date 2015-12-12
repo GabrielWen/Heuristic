@@ -22,7 +22,7 @@ var GameStores = BaseStore.createStore({
       grid: this.grid,
       gameConfig: this.gameConfig,
       gameInit: this.gameInit,
-      gmaeStart: this.gameStart,
+      gameStart: this.gameStart,
       alertInfo: this.alertInfo,
       bombCount: this.bombCount
     };
@@ -64,6 +64,11 @@ var GameStores = BaseStore.createStore({
     }
 
     this.emitChange();
+  },
+
+  handleStartPlay: function() {
+    this.gameStart = true;
+    this.emitChange();
   }
 });
 
@@ -74,6 +79,9 @@ AppDispatcher.register(function(action) {
       break;
     case constants.ActionType.SET_BOMB:
       GameStores.handleSetBomb(action.i, action.j);
+      break;
+    case constants.ActionType.GAME_PLAY:
+      GameStores.handleStartPlay();
       break;
     default:
   }
