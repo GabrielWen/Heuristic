@@ -23,6 +23,7 @@ var Game = React.createClass({
   },
   componentDidMount: function() {
     GameStores.addChangeListener(this._onChange);
+    window.addEventListener('keydown', this.keyboardHandler, false);
   },
   componentWillUnmount: function() {
     GameStores.removeChangeListener(this._onChange);
@@ -42,6 +43,13 @@ var Game = React.createClass({
   },
   handleStartPlay: function() {
     GameActions.handleStartPlay();
+  },
+  keyboardHandler: function(e) {
+    if (!this.state.gameStart || e.keyCode < 37 || e.keyCode > 40) {
+      return;
+    }
+
+    console.log(constants.Direction[e.keyCode]);
   },
   render: function() {
     var title = this.state.gameInit ? util.format('Game Playing: %s x %s with %s bombs and %s rovers',

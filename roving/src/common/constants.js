@@ -36,3 +36,10 @@ constants.Figures = {
   rover: '/static/figures/pilotlessRover.png',
   player: '/static/figures/spaceShip.jpg'
 };
+
+constants.Direction = {
+  37: 'LEFT',
+  38: 'UP',
+  39: 'RIGHT',
+  40: 'DOWN'
+};
