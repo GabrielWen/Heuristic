@@ -41,6 +41,11 @@ var GameActions = {
     AppDispatcher.dispatch({
       type: constants.ActionType.ADD_RANDBOMB
     });
+  },
+  handleGameReset: function() {
+    AppDispatcher.dispatch({
+      type: constants.ActionType.GAME_RESET
+    });
   }
 };
 

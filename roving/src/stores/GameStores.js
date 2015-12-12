@@ -305,6 +305,11 @@ var GameStores = BaseStore.createStore({
     }
     play(constants.Sounds.move).autoplay();
     this.emitChange();
+  },
+
+  handleGameReset: function() {
+    this.setDefaultData();
+    this.emitChange();
   }
 });
 
@@ -327,6 +332,9 @@ AppDispatcher.register(function(action) {
       break;
     case constants.ActionType.ADD_RANDBOMB:
       GameStores.handleRandBombs();
+      break;
+    case constants.ActionType.GAME_RESET:
+      GameStores.handleGameReset();
       break;
     default:
   }
