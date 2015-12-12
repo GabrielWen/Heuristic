@@ -70,19 +70,17 @@ var Game = React.createClass({
                                       this.state.gameConfig.numBombs, this.state.gameConfig.numRovers) :
                                       'Please choose configurations';
 
-    var button = this.state.gameInit ? (
+    var button = this.state.gameInit && !this.state.gameStart ? (
       <ButtonGroup>
-        <Button bsStyle="primary" onClick={this.handleStartPlay}>Play</Button>
-        <Button bsStyle="primary" onClick={this.handleRandBombs}>RandBombs</Button>
-        <Button bsSylte="danger" onClick={this.handleGameReset}>Reset</Button>
+        <Button bsStyle="danger" onClick={this.handleStartPlay}>Play</Button>
+        <Button bsStyle="warning" onClick={this.handleRandBombs}>RandBombs</Button>
       </ButtonGroup>
     ) : null;
 
     var addRoverButton = this.state.gameStart && !this.state.gameOver ? <Button bsStyle="success" disabled={this.state.roverCount === 0} onClick={this.handleAddRover}>Add Rover</Button> : null;
+    var resetButton = <Button bsStyle="danger" onClick={this.handleGameReset}>Reset</Button>;
 
     var alertInfo = _lo.isEmpty(this.state.alertInfo) || this.state.gameOver ? null : <Alert bsStyle={this.state.alertInfo.bsStyle}>{this.state.alertInfo.msg}</Alert>;
-
-    console.log(util.format('Score: %s', this.state.stepCount));
 
     if (this.state.gameOver) {
       return this.state.playerWon ? (
@@ -91,33 +89,34 @@ var Game = React.createClass({
         <Button bsStyle="success" onClick={this.handleGameReset}>Start Again</Button>
       </Jumbotron>) : (
       <Jumbotron>
-        <h1>{util.format('Game Over!  Your score is: %s', this.state.stepCount)}</h1>
+        <h1>{util.format('%s  Your score is: %s', this.state.playerWon ? 'You Win!' : 'Game Over!', this.state.stepCount)}</h1>
         <Button bsStyle="success" onClick={this.handleGameReset}>Start Again</Button>
       </Jumbotron>);
     }
 
     return (
       <Grid fluid>
-        <Col xs={12} md={6}>
-          <Row>
+        <Row>
+          <Col xs={12} md={9}>
             <Panel header={title}>
               {this.state.gameInit ? null : <SettingForm handleSubmit={GameActions.handleGameInit}/>}
               {alertInfo}
             </Panel>
-          </Row>
-          <Row>
-            <Panel header={util.format('Game Area.  Current Score: %s', this.state.stepCount)}>
-              <GameGrid grid={this.state.grid} gameInit={this.state.gameInit} gameStart={this.state.gameStart}
-                        gameConfig={this.state.gameConfig} handleClick={this.handleCellClick} curr={this.state.currPtr}/>
+          </Col>
+          <Col xs={12} md={3}>
+            <Panel header="Control Panel">
+              {button}
+              {resetButton}
+              {addRoverButton}
             </Panel>
-          </Row>
-        </Col>
-        <Col xs={12} md={6}>
-          <Panel header="Control Panel">
-            {button}
-            {addRoverButton}
+          </Col>
+        </Row>
+        <Row>
+          <Panel header={util.format('Game Area.  Current Score: %s', this.state.stepCount)}>
+            <GameGrid grid={this.state.grid} gameInit={this.state.gameInit} gameStart={this.state.gameStart}
+                      gameConfig={this.state.gameConfig} handleClick={this.handleCellClick} curr={this.state.currPtr}/>
           </Panel>
-        </Col>
+        </Row>
       </Grid>
     );
   }
