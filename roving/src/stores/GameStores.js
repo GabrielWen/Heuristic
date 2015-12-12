@@ -20,6 +20,7 @@ var GameStores = BaseStore.createStore({
     this.bombLocs = [];
     this.addingRover = false;
     this.currPtr = null;
+    this.stepCount = 0;
   },
 
   getState: function() {
@@ -34,7 +35,8 @@ var GameStores = BaseStore.createStore({
       roverCount: this.roverCount,
       bombLocs: this.bombLocs,
       addingRover: this.addingRover,
-      currPtr: this.currPtr
+      currPtr: this.currPtr,
+      stepCount: this.stepCount
     };
   },
 
@@ -67,7 +69,7 @@ var GameStores = BaseStore.createStore({
     return true;
   },
 
-  handleSetBomb: function(i, j) {
+  _handleSetBomb: function(i, j) {
     if (this.bombCount === 0) {
       this.alertInfo = {
         bsStyle: 'danger',
@@ -91,6 +93,22 @@ var GameStores = BaseStore.createStore({
     }
 
     this.emitChange();
+  },
+
+  _handlePlayerSelect: function(i, j) {
+    if (!_lo.includes(constants.PlayerClickable, this.grid[i][j])) {
+      return;
+    }
+    this.currPtr = [i, j];
+    console.log(util.format('Choosing %s at (%s, %s)', this.grid[i][j], i, j));
+  },
+
+  handleCellSelect: function(i, j) {
+    if (this.gameStart) {
+      this._handlePlayerSelect(i, j);
+    } else {
+      this._handleSetBomb(i, j);
+    }
   },
 
   handleStartPlay: function() {
@@ -142,6 +160,33 @@ var GameStores = BaseStore.createStore({
     return true;
   },
 
+  _handlePlacePlayer: function(v) {
+    switch(this.grid[v[0]][v[1]]) {
+      case constants.State.ROVER:
+        return false;
+      case constants.State.PLAYER:
+        return false;
+      case constants.State.PLAYER_ON_BURST:
+        return false;
+      case constants.State.ROVER_ON_BURST:
+        return false;
+      case constants.State.BOMB:
+        //TODO: Add lose logic
+        this.grid[v[0]][v[1]] = constants.State.BURST;
+        break;
+      case constants.State.DEST:
+        //TODO: Add win logic
+        break;
+      case constants.State.BURST:
+        this.grid[v[0]][v[1]] = constants.State.PLAYER_ON_BURST;
+        break;
+      default:
+        this.grid[v[0]][v[1]] = constants.State.PLAYER;
+    }
+
+    return true;
+  },
+
   handleKeyMove: function(code) {
     /**
      * Validation
@@ -182,8 +227,28 @@ var GameStores = BaseStore.createStore({
           msg: util.format('Available rovers: %s', this.roverCount)
         };
         this.addingRover = false;
+        this.stepCount++;
       }
     } else {
+      var update = false;
+      switch(this.grid[this.currPtr[0]][this.currPtr[1]]) {
+        case constants.State.PLAYER:
+          update = this._handlePlacePlayer(v);
+          break;
+        case constants.State.ROVER:
+          update = this._handlePlaceRover(v);
+          break;
+      }
+
+      if (update) {
+        if (_lo.includes(constants.BurstStates, this.grid[this.currPtr[0]][this.currPtr[1]])) {
+          this.grid[this.currPtr[0]][this.currPtr[1]] = constants.State.BURST;
+        } else {
+          this.grid[this.currPtr[0]][this.currPtr[1]] = constants.State.CLEAR;
+        }
+        this.currPtr = v;
+        this.stepCount++;
+      }
     }
 
     this.emitChange();
@@ -195,8 +260,8 @@ AppDispatcher.register(function(action) {
     case constants.ActionType.GAME_INIT:
       GameStores.handleGameInit(action.gameConfig);
       break;
-    case constants.ActionType.SET_BOMB:
-      GameStores.handleSetBomb(action.i, action.j);
+    case constants.ActionType.CELL_SELECT:
+      GameStores.handleCellSelect(action.i, action.j);
       break;
     case constants.ActionType.GAME_PLAY:
       GameStores.handleStartPlay();

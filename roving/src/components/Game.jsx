@@ -35,11 +35,10 @@ var Game = React.createClass({
     this.setState(GameStores.getState());
   },
   handleCellClick: function(i, j) {
-    //TODO: Need to support selecting rover/player
-    if (!this.state.gameInit || this.state.gameStart) {
+    if (!this.state.gameInit && !this.state.gameStart) {
       return;
     }
-    GameActions.handleSetBomb(i, j);
+    GameActions.handleCellSelect(i, j);
   },
   handleStartPlay: function() {
     GameActions.handleStartPlay();
@@ -71,6 +70,8 @@ var Game = React.createClass({
     var addRoverButton = this.state.gameStart ? <Button bsStyle="success" disabled={this.state.roverCount === 0} onClick={this.handleAddRover}>Add Rover</Button> : null;
 
     var alertInfo = _lo.isEmpty(this.state.alertInfo) ? null : <Alert bsStyle={this.state.alertInfo.bsStyle}>{this.state.alertInfo.msg}</Alert>;
+
+    console.log(util.format('Score: %s', this.state.stepCount));
 
     return (
       <div>

@@ -11,9 +11,9 @@ var GameActions = {
     });
   },
 
-  handleSetBomb: function(i, j) {
+  handleCellSelect: function(i, j) {
     AppDispatcher.dispatch({
-      type: constants.ActionType.SET_BOMB,
+      type: constants.ActionType.CELL_SELECT,
       i: i,
       j: j
     });
