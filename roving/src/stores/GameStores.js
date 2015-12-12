@@ -118,8 +118,6 @@ var GameStores = BaseStore.createStore({
         msg: util.format('Available bombs: %s', this.bombCount)
       };
     }
-
-    this.emitChange();
   },
 
   _handlePlayerSelect: function(i, j) {
@@ -136,6 +134,8 @@ var GameStores = BaseStore.createStore({
     } else {
       this._handleSetBomb(i, j);
     }
+
+    this.emitChange();
   },
 
   handleStartPlay: function() {

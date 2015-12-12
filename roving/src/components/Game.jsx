@@ -82,7 +82,7 @@ var Game = React.createClass({
         {alertInfo}
         {addRoverButton}
         <Grid grid={this.state.grid} gameInit={this.state.gameInit} gameStart={this.state.gameStart}
-              gameConfig={this.state.gameConfig} handleClick={this.handleCellClick}/>
+              gameConfig={this.state.gameConfig} handleClick={this.handleCellClick} curr={this.state.currPtr}/>
       </div>
     );
   }

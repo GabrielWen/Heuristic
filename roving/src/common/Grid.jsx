@@ -23,8 +23,13 @@ var Grid = React.createClass({
           position: 'absolute'
         };
 
+        var className = '';
+        if (!_lo.isEmpty(this.props.curr) && i == this.props.curr[0] && j == this.props.curr[1]) {
+          className = 'curr-chosen';
+        }
+
         ret.push(
-          <div key={util.format('cell-%s-%s', i, j)} style={style} onClick={_lo.partial(this.props.handleClick, i, j)}>
+          <div className={className} key={util.format('cell-%s-%s', i, j)} style={style} onClick={_lo.partial(this.props.handleClick, i, j)}>
             <Cell state={this.props.grid[i][j]} gameStart={this.props.gameStart}/>
           </div>
         );
