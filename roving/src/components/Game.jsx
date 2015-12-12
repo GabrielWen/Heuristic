@@ -85,7 +85,11 @@ var Game = React.createClass({
     console.log(util.format('Score: %s', this.state.stepCount));
 
     if (this.state.gameOver) {
-      return (
+      return this.state.playerWon ? (
+      <Jumbotron>
+        <h1>{util.format('You Win!  Your score is: %s', this.state.stepCount)}</h1>
+        <Button bsStyle="success" onClick={this.handleGameReset}>Start Again</Button>
+      </Jumbotron>) : (
       <Jumbotron>
         <h1>{util.format('Game Over!  Your score is: %s', this.state.stepCount)}</h1>
         <Button bsStyle="success" onClick={this.handleGameReset}>Start Again</Button>

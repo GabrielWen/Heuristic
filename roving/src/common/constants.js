@@ -64,4 +64,22 @@ constants.Direction = {
   40: 'DOWN'
 };
 
+constants.alertState = keyMirror({
+  DONEINIT: null,
+  PUTBOMB_OK: null,
+  DONEPLACEBOMBS: null,
+  PUTBOMBSNOPATH: null,
+  REPORTROVER: null,
+  ADDROVER: null
+});
+
+constants.alertInfo = {
+  doneInit: {bsStyle: 'success', msg: 'Game init. Place bombs on board or click RandBombs button!'},
+  putBombOk: {bsStyle: 'success', msg: 'Available bombs: '},
+  donePlaceBombs: {bsStyle: 'success', msg: 'All bombs are set. Press Play button!'},
+  putBombsNoPath: {bsStyle: 'danger', msg: 'Player has no path.'},
+  reportRover: {bsStyle: 'success', msg: 'Available rovers: '},
+  addRover: {bsStyle: 'warning', msg: 'Adding rover, please press a direction...'}
+};
+
 constants.PlayerBurstScore = 9999;

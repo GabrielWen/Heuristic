@@ -59,10 +59,8 @@ var GameStores = BaseStore.createStore({
     grid[gameConfig.numRows-1][0] = constants.State.PLAYER;
     grid[0][gameConfig.numCols-1] = constants.State.DEST;
 
-    this.alertInfo = {
-      bsStyle: 'success',
-      msg: 'Game init. Place bombs on board or click RandBombs button!'
-    };
+    this.alertInfo = this._hadleAlertInfo(constants.alertState.DONEINIT);
+    // constants.alertInfo.doneInit;
 
     this.grid = grid;
     this.gameConfig = gameConfig;
@@ -115,41 +113,24 @@ var GameStores = BaseStore.createStore({
         this.bombLocs[util.format('%s-%s', randi, randj)] = true;
       }
     }
-    this.alertInfo = {
-        bsStyle: 'success',
-        msg: 'All bombs are set. Press Play button!'
-      };
+    this.alertInfo = this._hadleAlertInfo(constants.alertState.DONEPLACEBOMBS);
     this.emitChange();
   },
 
   _handleSetBomb: function(i, j) {
-    if (this.bombCount === 0) {
-      this.alertInfo = {
-        bsStyle: 'success',
-        msg: 'All bombs are set. Press Play button!'
-      };
-    } else if (this.grid[i][j] == constants.State.CLEAR) {
+    if (this.grid[i][j] == constants.State.CLEAR) {
       if (!this.canAddBomb(i, j)) {
-        this.alertInfo = {
-          bsStyle: 'danger',
-          msg: util.format('Player has no path')
-        };
+        this.alertInfo = this._hadleAlertInfo(constants.alertState.PUTBOMBSNOPATH);
       } else {
         this.bombCount--;
+        this.alertInfo = this.bombCount === 0 ? this._hadleAlertInfo(constants.alertState.DONEPLACEBOMBS): this._hadleAlertInfo(constants.alertState.PUTBOMB_OK);
         this.grid[i][j] = constants.State.BOMB;
         this.bombLocs[util.format('%s-%s', i, j)] = true;
-        this.alertInfo = {
-          bsStyle: 'success',
-          msg: util.format('Available bombs: %s', this.bombCount)
-        };
       }
     } else if (this.grid[i][j] == constants.State.BOMB) {
       this.bombCount++;
       this.grid[i][j] = constants.State.CLEAR;
-      this.alertInfo = {
-        bsStyle: 'success',
-        msg: util.format('Available bombs: %s', this.bombCount)
-      };
+      this.alertInfo = this._hadleAlertInfo(constants.alertState.PUTBOMB_OK);
     }
   },
 
@@ -173,26 +154,13 @@ var GameStores = BaseStore.createStore({
 
   handleStartPlay: function() {
     this.gameStart = true;
-    this.alertInfo = {
-      bsStyle: 'success',
-      msg: util.format('Available rovers: %s', this.roverCount)
-    };
+    this.alertInfo = this._hadleAlertInfo(constants.alertState.REPORTROVER);
     this.emitChange();
   },
 
   handleAddRover: function() {
     this.addingRover ^= true;
-    if (this.addingRover) {
-      this.alertInfo = {
-        bsStyle: 'warning',
-        msg: 'Adding rover, please press a direction...'
-      };
-    } else {
-      this.alertInfo = {
-        bsStyle: 'success',
-        msg: util.format('Available rovers: %s', this.roverCount)
-      };
-    }
+    this.alertInfo = this.addingRover ? this._hadleAlertInfo(constants.alertState.ADDROVER) : this._hadleAlertInfo(constants.alertState.REPORTROVER);
     this.emitChange();
   },
 
@@ -219,6 +187,29 @@ var GameStores = BaseStore.createStore({
         this.grid[v[0]][v[1]] = constants.State.ROVER;
     }
     return true;
+  },
+
+  _hadleAlertInfo: function(type, addMSG) {
+    var alertInfo = null;
+    switch (type) {
+      case constants.alertState.DONEINIT:
+        return constants.alertInfo.doneInit;
+      case constants.alertState.PUTBOMB_OK:
+        alertInfo = _lo.clone(constants.alertInfo.putBombOk);
+        alertInfo.msg = alertInfo.msg + this.bombCount;
+        return alertInfo;
+      case constants.alertState.DONEPLACEBOMBS:
+        return constants.alertInfo.donePlaceBombs;
+      case constants.alertState.PUTBOMBSNOPATH:
+        return constants.alertInfo.putBombsNoPath;
+      case constants.alertState.REPORTROVER:
+        alertInfo = _lo.clone(constants.alertInfo.reportRover);
+        alertInfo.msg = alertInfo.msg + this.roverCount;
+        return alertInfo;
+      case constants.alertState.ADDROVER:
+        return constants.alertInfo.addRover;
+    }
+    return alertInfo;
   },
 
   _handlePlacePlayer: function(v) {
@@ -288,10 +279,7 @@ var GameStores = BaseStore.createStore({
     if (this.addingRover) {
       if (this._handlePlaceRover(v)) {
         this.roverCount--;
-        this.alertInfo = {
-          bsStyle: 'success',
-          msg: util.format('Available rovers: %s', this.roverCount)
-        };
+        this.alertInfo = this._hadleAlertInfo(constants.alertState.REPORTROVER);
         this.addingRover = false;
         this.stepCount++;
       }
