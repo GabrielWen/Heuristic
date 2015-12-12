@@ -62,6 +62,22 @@ module.exports = function(grunt) {
           watch: true
         }
       }
+    },
+    compress: {
+      prod: {
+        options: {
+          archive: 'hps-pg-roving.zip'
+        },
+        files: [
+          {
+            src: [
+              'static/**/*',
+              'views/**/*'
+            ],
+            dest: '/'
+          }
+        ]
+      }
     }
   });
 
@@ -69,6 +85,8 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-jsxhint');
   grunt.loadNpmTasks('grunt-browserify');
+  grunt.loadNpmTasks('grunt-contrib-compress');
 
   grunt.registerTask('default', ['jshint', 'browserify', 'express:server', 'watch:server']);
+  grunt.registerTask('deploy', ['jshint', 'browserify', 'compress']);
 };

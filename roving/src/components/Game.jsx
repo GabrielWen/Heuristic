@@ -68,7 +68,6 @@ var Game = React.createClass({
                                       this.state.gameConfig.numBombs, this.state.gameConfig.numRovers) :
                                       'Please choose configurations';
 
-    //TODO: onClick here
     var button = this.state.gameInit ? (
       <ButtonGroup>
         <Button bsStyle="primary" onClick={this.handleStartPlay}>Play</Button>
