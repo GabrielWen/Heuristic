@@ -118,8 +118,6 @@ var GameStores = BaseStore.createStore({
         msg: util.format('Available bombs: %s', this.bombCount)
       };
     }
-
-    this.emitChange();
   },
 
   _handlePlayerSelect: function(i, j) {
@@ -136,6 +134,8 @@ var GameStores = BaseStore.createStore({
     } else {
       this._handleSetBomb(i, j);
     }
+
+    this.emitChange();
   },
 
   handleStartPlay: function() {
@@ -262,7 +262,13 @@ var GameStores = BaseStore.createStore({
         case constants.State.PLAYER:
           update = this._handlePlacePlayer(v);
           break;
+        case constants.State.PLAYER_ON_BURST:
+          update = this._handlePlacePlayer(v);
+          break;
         case constants.State.ROVER:
+          update = this._handlePlaceRover(v);
+          break;
+        case constants.State.ROVER_ON_BURST:
           update = this._handlePlaceRover(v);
           break;
       }

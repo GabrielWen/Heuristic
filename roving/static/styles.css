@@ -41,6 +41,11 @@ body {
   position: relative;
 }
 
+.curr-chosen {
+  border-style:dotted;
+  border-color:#0000FF;
+}
+
 p {
    position: absolute;
    top: 0.4px;
