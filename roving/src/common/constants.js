@@ -37,3 +37,10 @@ constants.Figures = {
   player: '/static/figures/spaceShip.jpg',
   dest: '/static/figures/dest.png'
 };
+
+constants.Direction = {
+  37: 'LEFT',
+  38: 'UP',
+  39: 'RIGHT',
+  40: 'DOWN'
+};
