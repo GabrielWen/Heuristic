@@ -24,7 +24,7 @@ var Cell = React.createClass({
         img = constants.Figures.player;
         break;
       case constants.State.DEST:
-        //TODO
+        img = constants.Figures.dest;
         break;
       default:
     }

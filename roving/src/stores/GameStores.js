@@ -40,6 +40,7 @@ var GameStores = BaseStore.createStore({
 
     //Set player/dest
     grid[gameConfig.numRows-1][0] = constants.State.PLAYER;
+    grid[0][gameConfig.numCols-1] = constants.State.DEST;
 
     this.grid = grid;
     this.gameConfig = gameConfig;
