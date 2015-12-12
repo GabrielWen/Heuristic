@@ -23,6 +23,19 @@ var GameActions = {
     AppDispatcher.dispatch({
       type: constants.ActionType.GAME_PLAY
     });
+  },
+
+  handleAddRover: function() {
+    AppDispatcher.dispatch({
+      type: constants.ActionType.ADD_ROVER
+    });
+  },
+
+  handleGameMove: function(keyCode) {
+    AppDispatcher.dispatch({
+      type: constants.ActionType.GAME_MOVE,
+      keyCode: keyCode
+    });
   }
 };
 
