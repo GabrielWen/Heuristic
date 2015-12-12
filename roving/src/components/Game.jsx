@@ -47,7 +47,7 @@ var Game = React.createClass({
     GameActions.handleAddRover();
   },
   keyboardHandler: function(e) {
-    if (!this.state.gameStart || e.keyCode < 37 || e.keyCode > 40) {
+    if (this.state.gameOver || !this.state.gameStart || e.keyCode < 37 || e.keyCode > 40) {
       return;
     }
 

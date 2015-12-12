@@ -63,3 +63,5 @@ constants.Direction = {
   39: 'RIGHT',
   40: 'DOWN'
 };
+
+constants.PlayerBurstScore = 9999;

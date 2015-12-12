@@ -22,6 +22,7 @@ var GameStores = BaseStore.createStore({
     this.addingRover = false;
     this.currPtr = null;
     this.stepCount = 0;
+    this.gameOver = false;
   },
 
   getState: function() {
@@ -37,7 +38,8 @@ var GameStores = BaseStore.createStore({
       bombLocs: this.bombLocs,
       addingRover: this.addingRover,
       currPtr: this.currPtr,
-      stepCount: this.stepCount
+      stepCount: this.stepCount,
+      gameOver: this.gameOver
     };
   },
 
@@ -220,9 +222,12 @@ var GameStores = BaseStore.createStore({
       case constants.State.BOMB:
         //TODO: Add lose logic
         this.grid[v[0]][v[1]] = constants.State.BURST;
+        this.gameOver = true;
+        this.stepCount = constants.PlayerBurstScore;
         break;
       case constants.State.DEST:
         //TODO: Add win logic
+        this.gameOver = true;
         break;
       case constants.State.BURST:
         this.grid[v[0]][v[1]] = constants.State.PLAYER_ON_BURST;
