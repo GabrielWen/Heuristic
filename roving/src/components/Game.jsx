@@ -51,7 +51,6 @@ var Game = React.createClass({
     if (this.state.gameOver || !this.state.gameStart || e.keyCode < 37 || e.keyCode > 40) {
       return;
     }
-
     GameActions.handleGameMove(e.keyCode);
   },
   handleRandBombs: function() {
