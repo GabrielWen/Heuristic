@@ -15,6 +15,7 @@ var GameStores = BaseStore.createStore({
     this.gameStart = false;
     this.alertInfo = null;
     this.bombCount = 0;
+    this.bombLocs = [];
   },
 
   getState: function() {
@@ -24,7 +25,8 @@ var GameStores = BaseStore.createStore({
       gameInit: this.gameInit,
       gameStart: this.gameStart,
       alertInfo: this.alertInfo,
-      bombCount: this.bombCount
+      bombCount: this.bombCount,
+      bombLocs: this.bombLocs
     };
   },
 
@@ -49,15 +51,21 @@ var GameStores = BaseStore.createStore({
     this.emitChange();
   },
 
+  availablePathExisted: function(i, j) {
+    console.log('cur bombLocs:\n' + this.bombLocs);
+    return true;
+  },
+
   handleSetBomb: function(i, j) {
     if (this.bombCount === 0) {
       this.alertInfo = {
         bsStyle: 'danger',
         msg: 'All available bombs are already set'
       };
-    } else if (this.grid[i][j] == constants.State.CLEAR) {
+    } else if (this.grid[i][j] == constants.State.CLEAR & this.availablePathExisted(i, j)) {
       this.bombCount--;
       this.grid[i][j] = constants.State.BOMB;
+      this.bombLocs.push([i,j]);
       this.alertInfo = {
         bsStyle: 'success',
         msg: util.format('Available bombs: %s', this.bombCount)
