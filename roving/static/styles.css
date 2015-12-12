@@ -52,10 +52,3 @@ body {
 .curr-not-chosen {
   border: 2px solid transparent;
 }
-
-p {
-   position: absolute;
-   top: 0.4px;
-   left: 0;
-   font-size: 100%;
-}
