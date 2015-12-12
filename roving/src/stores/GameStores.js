@@ -262,7 +262,13 @@ var GameStores = BaseStore.createStore({
         case constants.State.PLAYER:
           update = this._handlePlacePlayer(v);
           break;
+        case constants.State.PLAYER_ON_BURST:
+          update = this._handlePlacePlayer(v);
+          break;
         case constants.State.ROVER:
+          update = this._handlePlaceRover(v);
+          break;
+        case constants.State.ROVER_ON_BURST:
           update = this._handlePlaceRover(v);
           break;
       }
