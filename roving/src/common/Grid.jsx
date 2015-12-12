@@ -30,7 +30,7 @@ var Grid = React.createClass({
     }, this);
 
     var gridWidth = {
-      width: this.props.gameConfig.numCols * constants.DefaultSetting.picSize + 10
+      width: this.props.gameConfig.numCols * (constants.DefaultSetting.picSize + 4)
     };
 
     return <div style={gridWidth}>{pics}</div>;

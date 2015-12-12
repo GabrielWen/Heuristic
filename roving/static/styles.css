@@ -46,10 +46,11 @@ body {
 .curr-chosen {
   border-style: dotted;
   border-color: #0000FF;
+  border-width: 2px;
 }
 
 .curr-not-chosen {
-  border-style: hidden;
+  border: 2px solid transparent;
 }
 
 p {
