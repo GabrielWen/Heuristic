@@ -199,6 +199,7 @@ var GameStores = BaseStore.createStore({
         return false;
       case constants.State.BOMB:
         this.grid[v[0]][v[1]] = constants.State.BURST;
+        play(constants.Sounds.explosion).autoplay();
         break;
       case constants.State.BURST:
         this.grid[v[0]][v[1]] = constants.State.ROVER_ON_BURST;
@@ -232,7 +233,6 @@ var GameStores = BaseStore.createStore({
         break;
       case constants.State.BURST:
         this.grid[v[0]][v[1]] = constants.State.PLAYER_ON_BURST;
-        play(constants.Sounds.explosion).autoplay();
         break;
       default:
         this.grid[v[0]][v[1]] = constants.State.PLAYER;
