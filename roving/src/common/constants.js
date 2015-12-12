@@ -36,7 +36,7 @@ constants.State = keyMirror({
 constants.Figures = {
   dot: '/static/figures/dot.png',
   bombs: '/static/figures/bombs.gif',
-  burst: '/static/figures/bombBurst.jpg',
+  burst: '/static/figures/bombsBurst.jpg',
   rover: '/static/figures/pilotlessRover.png',
   player: '/static/figures/spaceShip.jpg',
   dest: '/static/figures/dest.png'
