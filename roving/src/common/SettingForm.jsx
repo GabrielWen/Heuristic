@@ -2,8 +2,7 @@
 
 var React = require('react');
 var Input = require('react-bootstrap').Input;
-var ButtonInput = require('react-bootstrap').ButtonInput;
-
+var Button = require('react-bootstrap').Button;
 var constants = require('./constants');
 
 var SettingForm = React.createClass({
@@ -27,7 +26,7 @@ var SettingForm = React.createClass({
         <input type="number" label="Num Bombs" ref="numBombs" defaultValue={constants.DefaultSetting.numBombs}/>
         <label>Num Rovers</label>
         <input type="number" label="Num Rovers" ref="numRovers" defaultValue={constants.DefaultSetting.numRovers}/>
-        <ButtonInput type="submit" onClick={this.onSubmit}/>
+        <Button bsStyle="success" onClick={this.onSubmit}>Submit</Button>
       </form>
     );
   }
