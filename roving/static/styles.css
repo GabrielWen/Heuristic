@@ -37,13 +37,19 @@ body {
    width: 100%; /* for IE 6 */
 }
 
-.grid {
-  position: relative;
+.grid-style {
+  display: inline-block;
+  zoom: 1;
+  display*: inline;
 }
 
 .curr-chosen {
-  border-style:dotted;
-  border-color:#0000FF;
+  border-style: dotted;
+  border-color: #0000FF;
+}
+
+.curr-not-chosen {
+  border-style: hidden;
 }
 
 p {

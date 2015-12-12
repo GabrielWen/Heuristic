@@ -38,7 +38,11 @@ var Cell = React.createClass({
       default:
     }
 
-    return <img src={img} width={constants.DefaultSetting.picSize} height={constants.DefaultSetting.picSize}/>;
+    return (
+      <div className={this.props.picStyle}>
+        <img src={img} width={constants.DefaultSetting.picSize} height={constants.DefaultSetting.picSize} onClick={this.props.handleClick}/>
+      </div>
+    );
   }
 });
 

@@ -18,6 +18,7 @@ var GameStores = require('../stores/GameStores');
 
 var SettingForm = require('../common/SettingForm.jsx');
 var Grid = require('../common/Grid.jsx');
+var Test = require('../common/Test.jsx');
 
 var Game = React.createClass({
   getInitialState: function() {
@@ -53,6 +54,9 @@ var Game = React.createClass({
 
     GameActions.handleGameMove(e.keyCode);
   },
+  test: function() {
+    console.log('This is test');
+  },
   render: function() {
     var title = this.state.gameInit ? util.format('Game Playing: %s x %s with %s bombs and %s rovers',
                                       this.state.gameConfig.numRows, this.state.gameConfig.numCols,
@@ -81,7 +85,7 @@ var Game = React.createClass({
         </Panel>
         {alertInfo}
         {addRoverButton}
-        <Grid grid={this.state.grid} gameInit={this.state.gameInit} gameStart={this.state.gameStart}
+        <Test grid={this.state.grid} gameInit={this.state.gameInit} gameStart={this.state.gameStart}
               gameConfig={this.state.gameConfig} handleClick={this.handleCellClick} curr={this.state.currPtr}/>
       </div>
     );
