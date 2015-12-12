@@ -82,12 +82,10 @@ var Game = React.createClass({
 
     var alertInfo = _lo.isEmpty(this.state.alertInfo) || this.state.gameOver ? null : <Alert bsStyle={this.state.alertInfo.bsStyle}>{this.state.alertInfo.msg}</Alert>;
 
-    console.log(util.format('Score: %s', this.state.stepCount));
-
     if (this.state.gameOver) {
       return (
       <Jumbotron>
-        <h1>{util.format('Game Over!  Your score is: %s', this.state.stepCount)}</h1>
+        <h1>{util.format('%s  Your score is: %s', this.state.playerWon ? 'You Win!' : 'Game Over!', this.state.stepCount)}</h1>
         <Button bsStyle="success" onClick={this.handleGameReset}>Start Again</Button>
       </Jumbotron>);
     }
