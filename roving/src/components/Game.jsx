@@ -68,7 +68,7 @@ var Game = React.createClass({
       </ButtonGroup>
     ) : null;
 
-    var addRoverButton = this.state.gameStart ? <Button bsStyle="success" onClick={this.handleAddRover}>Add Rover</Button> : null;
+    var addRoverButton = this.state.gameStart ? <Button bsStyle="success" disabled={this.state.roverCount === 0} onClick={this.handleAddRover}>Add Rover</Button> : null;
 
     var alertInfo = _lo.isEmpty(this.state.alertInfo) ? null : <Alert bsStyle={this.state.alertInfo.bsStyle}>{this.state.alertInfo.msg}</Alert>;
 
