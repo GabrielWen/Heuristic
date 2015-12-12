@@ -32,6 +32,9 @@ var Cell = React.createClass({
       case constants.State.DEST:
         img = constants.Figures.dest;
         break;
+      case constants.State.STEPPED:
+        img = null;
+        break;
       default:
     }
 

@@ -278,7 +278,7 @@ var GameStores = BaseStore.createStore({
         if (_lo.includes(constants.BurstStates, this.grid[this.currPtr[0]][this.currPtr[1]])) {
           this.grid[this.currPtr[0]][this.currPtr[1]] = constants.State.BURST;
         } else {
-          this.grid[this.currPtr[0]][this.currPtr[1]] = constants.State.CLEAR;
+          this.grid[this.currPtr[0]][this.currPtr[1]] = constants.State.STEPPED;
         }
         this.currPtr = v;
         this.stepCount++;

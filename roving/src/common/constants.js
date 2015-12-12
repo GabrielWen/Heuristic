@@ -30,7 +30,8 @@ constants.State = keyMirror({
   DEST: null,
   BURST: null,
   PLAYER_ON_BURST: null,
-  ROVER_ON_BURST: null
+  ROVER_ON_BURST: null,
+  STEPPED: null
 });
 
 constants.PlayerClickable = [constants.State.ROVER, constants.State.PLAYER, constants.State.PLAYER_ON_BURST,
