@@ -2,6 +2,7 @@
 
 var _lo = require('lodash');
 var util = require('util');
+var play = require('play-audio');
 
 var AppDispatcher = require('../dispatcher');
 var BaseStore = require('../common/BaseStore');
@@ -283,7 +284,7 @@ var GameStores = BaseStore.createStore({
         this.stepCount++;
       }
     }
-
+    play(constants.Sounds.move).autoplay();
     this.emitChange();
   }
 });

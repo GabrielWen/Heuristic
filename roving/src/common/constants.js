@@ -48,10 +48,10 @@ constants.Figures = {
 };
 
 constants.Sounds = {
-  dead: '/static/sounds/death.wav',
-  explosion: '/static/sounds/explosion.wav',
-  move: '/static/sounds/move.wav',
-  win: '/static/sounds/win.wav'
+  dead: '../../static/sounds/death.wav',
+  explosion: '../../static/sounds/explosion.wav',
+  move: '../../static/sounds/move.wav',
+  win: '../../static/sounds/win.wav'
 };
 
 constants.Direction = {
