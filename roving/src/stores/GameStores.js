@@ -247,7 +247,7 @@ var GameStores = BaseStore.createStore({
     /**
      * Validation
      */
-    var v = _lo.clone(this.currPtr);
+    var v = _lo.clone(this.addingRover ? this.playerPos : this.currPtr);
     switch(code) {
       case 37:
         if (this.currPtr[1] === 0) {
@@ -290,9 +290,15 @@ var GameStores = BaseStore.createStore({
       switch(this.grid[this.currPtr[0]][this.currPtr[1]]) {
         case constants.State.PLAYER:
           update = this._handlePlacePlayer(v);
+          if (update) {
+            this.playerPos = v;
+          }
           break;
         case constants.State.PLAYER_ON_BURST:
           update = this._handlePlacePlayer(v);
+          if (update) {
+            this.playerPos = v;
+          }
           break;
         case constants.State.ROVER:
           update = this._handlePlaceRover(v);

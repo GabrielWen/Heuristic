@@ -9,8 +9,9 @@ var Button = require('react-bootstrap').Button;
 var ButtonGroup = require('react-bootstrap').ButtonGroup;
 var Panel = require('react-bootstrap').Panel;
 var Alert = require('react-bootstrap').Alert;
-var Carousel = require('react-bootstrap').Carousel;
-var CarouselItem = require('react-bootstrap').CarouselItem;
+var Grid = require('react-bootstrap').Grid;
+var Row = require('react-bootstrap').Row;
+var Col = require('react-bootstrap').Col;
 
 var constants = require('../common/constants');
 var GameActions = require('../actions/GameActions');
