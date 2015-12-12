@@ -19,7 +19,7 @@ var GameActions = require('../actions/GameActions');
 var GameStores = require('../stores/GameStores');
 
 var SettingForm = require('../common/SettingForm.jsx');
-var Grid = require('../common/Grid.jsx');
+var GameGrid = require('../common/Grid.jsx');
 
 var Game = React.createClass({
   getInitialState: function() {
@@ -91,6 +91,33 @@ var Game = React.createClass({
     console.log(util.format('Score: %s', this.state.stepCount));
 
     return (
+      <Grid fluid>
+        {gameOverInfo}
+        <Col xs={12} md={6}>
+          <Row>
+            <Panel header={title}>
+              {this.state.gameInit ? null : <SettingForm handleSubmit={GameActions.handleGameInit}/>}
+              {alertInfo}
+            </Panel>
+          </Row>
+          <Row>
+            <Panel header="Game Area">
+              <GameGrid grid={this.state.grid} gameInit={this.state.gameInit} gameStart={this.state.gameStart}
+                        gameConfig={this.state.gameConfig} handleClick={this.handleCellClick} curr={this.state.currPtr}/>
+            </Panel>
+          </Row>
+        </Col>
+        <Col xs={12} md={6}>
+          <Panel header="Control Panel">
+            {button}
+            {addRoverButton}
+          </Panel>
+        </Col>
+      </Grid>
+    );
+
+/*
+    return (
       <div>
         <Panel header={title}>
           {this.state.gameInit ? null : <SettingForm handleSubmit={GameActions.handleGameInit}/>}
@@ -103,6 +130,7 @@ var Game = React.createClass({
               gameConfig={this.state.gameConfig} handleClick={this.handleCellClick} curr={this.state.currPtr}/>
       </div>
     );
+*/
   }
 });
 
