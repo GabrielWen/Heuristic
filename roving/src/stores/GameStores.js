@@ -80,6 +80,12 @@ var GameStores = BaseStore.createStore({
   },
 
   canAddBomb: function(i, j) {
+    if (i === constants.State.PLAYER[0] && j === constants.State.PLAYER[1]) {
+      return false;
+    } else if (i === constants.State.DEST[0] && j === constants.State.DEST[1]) {
+      return false;
+    }
+
     this.bombLocs[util.format('%s-%s', i, j)] = true;
     var hasPresult = this.hasPath(this.playerPos[0], this.playerPos[1]);
     if (hasPresult) {
@@ -88,6 +94,19 @@ var GameStores = BaseStore.createStore({
       this.bombLocs[util.format('%s-%s', i, j)] = false;
       return false;
     }
+  },
+
+  handleRandBombs: function() {
+    while (this.bombCount >0 ) {
+      var randi = Math.floor(Math.random()*this.gameConfig.numRows);
+      var randj = Math.floor(Math.random()*this.gameConfig.numCols);
+      if (this.grid[randi][randj] == constants.State.CLEAR && this.canAddBomb(randi, randj)) {
+        this.bombCount--;
+        this.grid[randi][randj] = constants.State.BOMB;
+        this.bombLocs[util.format('%s-%s', randi, randj)] = true;
+      }
+    }
+    this.emitChange();
   },
 
   _handleSetBomb: function(i, j) {
@@ -305,6 +324,9 @@ AppDispatcher.register(function(action) {
       break;
     case constants.ActionType.GAME_MOVE:
       GameStores.handleKeyMove(action.keyCode);
+      break;
+    case constants.ActionType.ADD_RANDBOMB:
+      GameStores.handleRandBombs();
       break;
     default:
   }

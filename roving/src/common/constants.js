@@ -9,7 +9,8 @@ constants.ActionType = keyMirror({
   CELL_SELECT: null,
   GAME_PLAY: null,
   ADD_ROVER: null,
-  GAME_MOVE: null
+  GAME_MOVE: null,
+  ADD_RANDBOMB: null
 });
 
 constants.DefaultSetting = {
