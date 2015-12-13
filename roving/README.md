@@ -18,3 +18,5 @@ In this game, rover team wants their rover to reach the destination and adversar
 1. Clone the whole repo.
 2. Install all dependencies with `npm install`, permission might be required.
 3. Initiate web app with `npm start`.  Default setting is listening at `http://0.0.0.0:1992`.
+
+Example of deployment can be seen [here](http://cims.nyu.edu/drecco/games/SafeRovingV2/views/launch.php)
