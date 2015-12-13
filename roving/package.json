@@ -1,7 +1,7 @@
 {
   "name": "safe-roving",
   "description": "Heuristic Problem Solving - Safe Roving",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "main": "main.js",
   "scripts": {
     "start": "node --harmony ./node_modules/.bin/grunt",
