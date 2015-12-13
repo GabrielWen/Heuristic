@@ -1,0 +1,69 @@
+{
+  "name": "safe-roving",
+  "description": "Heuristic Problem Solving - Safe Roving",
+  "version": "0.0.1",
+  "main": "main.js",
+  "scripts": {
+    "start": "node --harmony ./node_modules/.bin/grunt",
+    "deploy": "node --harmony ./node_modules/.bin/grunt deploy"
+  },
+  "private": false,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/GabrielWen/Heuristic.git"
+  },
+  "jshintConfig": {
+    "browserify": true,
+    "browser": true,
+    "jasmine": true,
+    "devel": true,
+    "undef": true,
+    "strict": true,
+    "predef": [
+      "-Promise"
+    ],
+    "globals": {
+      "APP_VERSION": true,
+      "Raven": true,
+      "FIREBASE_URL": true,
+      "DISPATCHER_URL": true,
+      "OH_WORK_HOUR": true,
+      "GA": true,
+      "google": true,
+      "GOOGLE_API_KEY": true,
+      "jest": true
+    }
+  },
+  "dependencies": {
+    "bluebird": "^2.9.30",
+    "compression": "^1.3.0",
+    "convict": "^0.6.1",
+    "express": "^4.12.4",
+    "lodash": "^3.9.3",
+    "jade": "^1.9.2",
+    "moment": "^2.9.0",
+    "consolidate": "^0.13.1",
+    "mustache": "^2.2.0",
+    "play-audio": "0.1.0"
+  },
+  "devDependencies": {
+    "flux": "^2.0.3",
+    "browserify": "^10.2.4",
+    "grunt": "^0.4.5",
+    "grunt-cli": "^0.1.13",
+    "grunt-contrib-watch": "^0.6.1",
+    "grunt-contrib-compress": "^0.13.0",
+    "grunt-express-server": "^0.4.19",
+    "grunt-jsxhint": "0.5.0",
+    "grunt-browserify": "^3.3.0",
+    "jquery": "^2.1.3",
+    "jquery-ui": "^1.10.5",
+    "react": "^0.13.3",
+    "react-bootstrap": "^0.24.2",
+    "react-intl": "^1.2.0",
+    "react-router": "^0.13.3",
+    "react-router-bootstrap": "^0.12.1",
+    "react-tools": "^0.13.3",
+    "reactify": "^1.0.0"
+  }
+}
