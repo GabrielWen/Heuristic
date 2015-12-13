@@ -24,6 +24,7 @@ var GameStores = BaseStore.createStore({
     this.stepCount = 0;
     this.gameOver = false;
     this.playerWon = false;
+    this.playerName = 'guest';
   },
 
   getState: function() {
@@ -41,7 +42,8 @@ var GameStores = BaseStore.createStore({
       currPtr: this.currPtr,
       stepCount: this.stepCount,
       gameOver: this.gameOver,
-      playerWon: this.playerWon
+      playerWon: this.playerWon,
+      playerName: this.playerName
     };
   },
 
@@ -69,6 +71,7 @@ var GameStores = BaseStore.createStore({
     this.playerPos = [gameConfig.numRows-1, 0];
     this.currPtr = this.playerPos;
     this.roverCount = gameConfig.numRovers;
+    this.playerName = gameConfig.playerName;
     this.emitChange();
   },
 

@@ -9,6 +9,7 @@ var constants = require('./constants');
 var SettingForm = React.createClass({
   onSubmit: function() {
     this.props.handleSubmit({
+      playerName: this.refs.playerName.getValue(),
       numRows: parseInt(this.refs.numRows.getValue()),
       numCols: parseInt(this.refs.numCols.getValue()),
       numBombs: parseInt(this.refs.numBombs.getValue()),
@@ -19,6 +20,7 @@ var SettingForm = React.createClass({
     return (
       <div>
       <form className="form-inline">
+        <Input label="Player Name" type="text" ref="playerName" defaultValue="guest"/>
         <Input label="Num Rows" type="number" ref="numRows" defaultValue={constants.DefaultSetting.numRows}/>
         <Input label="Num Cols" type="number" ref="numCols" defaultValue={constants.DefaultSetting.numCols}/>
       </form>
